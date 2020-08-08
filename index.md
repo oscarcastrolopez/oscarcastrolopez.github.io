@@ -1,1 +1,1 @@
-<object data="notebook_covid19.html" type="text/html"></object>
+<object data="notebook_covid19.html" width="105%" type="text/html"></object>
