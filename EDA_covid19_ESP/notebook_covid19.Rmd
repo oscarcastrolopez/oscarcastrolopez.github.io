@@ -1,0 +1,630 @@
+---
+title: "Análisis Exploratorio de Datos (EDA) Covid-19"
+output:
+  html_document:
+    keep_md: true
+    code_folding: hide
+     
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+# Descripción
+Este es un análisis exploratorio de datos con fines didácticos. El análisis es realizado con datos relacionados con Covid-19 reportados por diversos países. Los datos son obtenidos del sitio: <https://ourworldindata.org/coronavirus-source-data>. El conjunto de datos es actualizado constantemente. Por lo tanto, una ventaja de descargarlo directamente del sitio es obtener los datos actualizados.
+
+<div align="center">
+Hecho por: <strong>Oscar Castro </strong>
+</div>
+
+<strong>
+Fecha de ejecución del codigo:
+```{r}
+print(format(Sys.Date(), "%A, %d de %B de %Y"))
+```
+</strong>
+
+#### Lectura de datos ##
+```{r}
+covid.df <- read.csv("https://covid.ourworldindata.org/data/owid-covid-data.csv")
+```
+
+Cargamos los paquetes necesarios:
+```{r}
+library(ggplot2)
+library(knitr)
+library(reshape2)
+library(kableExtra)
+```
+
+#### Revisamos la estructura del dataframe:
+```{r}
+str(covid.df)
+```
+
+La descripción de cada una de las variables de este conjunto de datos se encuentra en el sitio: <https://github.com/owid/covid-19-data/blob/master/public/data/owid-covid-data-codebook.md>.
+
+Ajuste de la columna date que es tipo *factor* a tipo *date*:
+```{r}
+covid.df$date <- as.Date(covid.df$date, format("%Y-%m-%d"))
+```
+#### Países del conjunto de datos
+```{r}
+levels(covid.df$location)
+```
+
+#### Continentes del conjunto de datos
+```{r}
+levels(covid.df$continent)
+```
+
+#### ¿Cuál es la cantidad de días máximo que ha sido reportado por los países?
+```{r}
+maxdays <- max(table(covid.df$location))
+print(paste("Días máximos reportados:",maxdays))
+```
+#### Países que han reportado datos la mayor cantidad de días
+```{r}
+names(table(covid.df$location)[table(covid.df$location)==maxdays])
+```
+#### ¿En qué fechas inicia y terminan los datos reportados?
+```{r}
+startdate <- min(covid.df$date)
+enddate <- max(covid.df$date)
+print(paste("Inicia el", format(startdate, "%d de %B de %Y"), 
+            "y termina el",  format(enddate, "%d de %B de %Y")))
+```
+
+## Rankings de países con las variables totales o acumuladas disponibles en el conjunto de datos
+Filtramos nuestro dataframe original, sólo nos quedamos con las observaciones en donde la columna date sea igual a la fecha máxima. De esta manera tendremos los totales o acumulados más actualizados de cada país. Adicionalmente, `r kableExtra::text_spec("eliminamos los países con menos de 1 millón de habitantes", color = "red")`.
+
+Analizaremos los rankings de países con las siguientes variables:
+```{r}
+# Get one row of each country with the most updated totals
+covid.total.df <- covid.df[covid.df$date== enddate,]
+# Filter countries with less than 1 millón population
+covid.total.df <- covid.total.df[covid.total.df$population >= 1000000,]
+print(names(covid.total.df)[c(5,7,9,11)])
+```
+
+### Ranking de países con total de casos confirmados de COVID-19
+Para obtener el top 20 ordenamos los datos con la columna total_cases. Guardamos sólo los 20 países con más casos y los 20 países con menos casos. Finalmente, filtramos sólo las columnas que nos interesan. Y mostramos los datos en una tabla y en una gráfica de Barras horizontales.
+
+```{r results='hold'}
+# Ordenamos los datos de acuerdo a la columna total_cases de manera descendente
+ranking.total_cases <- covid.total.df[order(-covid.total.df$total_cases),]
+# Quitamos los datos de World, para solo quedarnos con datos de países
+ranking.total_cases <- ranking.total_cases[ranking.total_cases$location != "World", ]
+# Agregamos una nueva columna con el índice numérico de la posición del pais en el top
+ranking.total_cases$position <- 1:nrow(ranking.total_cases)
+# Nos quedamos sólo con los primeros 20 países y las columnas que nos interesan
+columnfilter <- c("position", "location", "total_cases")
+bottom20.total_cases <- tail(ranking.total_cases[, columnfilter],20)
+top20.total_cases <- head(ranking.total_cases[, columnfilter],20)
+rm(ranking.total_cases)
+rownames(top20.total_cases) <- c()
+rownames(bottom20.total_cases) <- c()
+
+mexrow <- which(top20.total_cases$location=='Mexico')
+tablecolnames <- c("Posición", "País", "Casos Totales")
+top20.total_cases$total_cases_formated <- formatC(top20.total_cases$total_cases, 
+                                                  format="f", big.mark=",", digits=0)
+bottom20.total_cases$total_cases_formated <- formatC(bottom20.total_cases$total_cases, 
+                                                     format="f", big.mark=",", digits=0)
+
+kable(top20.total_cases[,c(1,2,4)], format = "html", align = "clr", 
+      col.names=tablecolnames, caption="Top 20 - Países con más casos") %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"), 
+                full_width = F, position = "float_left") %>%
+  row_spec(mexrow, bold = T, color = "black", background = "yellow")
+
+kable(bottom20.total_cases[,c(1,2,4)], format = "html", align = "clr", 
+      col.names=tablecolnames, caption="Top 20 - Países con menos casos") %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"), 
+                full_width = F, position = "right")
+```
+### Gráfica de barras horizontales con los 20 países con más casos reportados de COVID-19.
+```{r fig.height=8, fig.width=15}
+ggplot(data=top20.total_cases, aes(x=reorder(paste(position, location),total_cases), 
+                                   y=total_cases, fill=location))+
+  geom_bar(stat = "identity", position=position_dodge(), colour="black", show.legend = FALSE)+
+  ylab("Número de Casos Reportados de COVID-19") +
+  geom_text(aes(y=max(total_cases)+150000, label=total_cases_formated), color="black")+
+  labs(title="Top 20 países con más casos reportados de COVID-19")+
+  scale_y_continuous(breaks=c(100000, 250000, 500000, 750000, 1000000, 2500000, 4000000, 5000000),
+                     label=c("100k", "250k", "500k", "750k", "1m", "2.5m", "4m", "5m"))+
+  coord_flip() +
+  xlab("Países") +
+  theme_bw()+
+  theme(title = element_text(size=14, face="bold", colour = "black"),
+        axis.text.y = element_text(size=11, face="bold", colour = "black"),
+        axis.text.x = element_text(size=11, face="bold", colour = "black"))
+```
+
+### Ranking de países con total de casos confirmados de COVID-19 - Sólo América:
+Obtenemos los rankings pero ahora para el continente americano. Filtramos los datos por la columna continent de "Nort America" y "South America".
+```{r results='hold'}
+ranking.total_cases.america <- covid.total.df[covid.total.df$continent %in% 
+                                                c("North America", "South America") ,]
+ranking.total_cases.america <- ranking.total_cases.america[order(-ranking.total_cases.america$total_cases),]
+ranking.total_cases.america$position <- 1:nrow(ranking.total_cases.america)
+bottom20.total_cases.america <- tail(ranking.total_cases.america[, c("position", "location", "total_cases")],5)
+top20.total_cases.america <- head(ranking.total_cases.america[, c("position", "location", "total_cases")],20)
+rownames(bottom20.total_cases.america) <- c()
+rownames(top20.total_cases.america) <- c()
+mexrow <- which(ranking.total_cases.america$location=='Mexico')
+rm(ranking.total_cases.america)
+top20.total_cases.america$total_cases_formated <- formatC(top20.total_cases.america$total_cases,
+                                                          format="f", big.mark=",", digits=0)
+bottom20.total_cases.america$total_cases_formated <- formatC(bottom20.total_cases.america$total_cases, 
+                                                             format="f", big.mark=",", digits=0)
+tablecolnames <- c("Posición", "País", "Casos Totales")
+kable(top20.total_cases.america[,c(1,2,4)], format = "html", align = "clr", 
+      col.names=tablecolnames, caption="Top 20 América - Países con más casos") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"), 
+                full_width = F, position = "center") %>%
+row_spec(mexrow, bold = T, color = "black", background = "yellow")
+```
+### Gráfica de barras horizontales con los 20 países con más casos reportados de COVID-19 de América.
+```{r fig.height=8, fig.width=15}
+ggplot(data=top20.total_cases.america, aes(x=reorder(paste(position, location),total_cases),
+                                           y=total_cases, fill=location))+
+  geom_bar(stat = "identity", position=position_dodge(), colour="black", show.legend = FALSE)+
+  ylab("Número de Casos Reportados de COVID-19") +
+  geom_text(aes(y=max(total_cases)+150000, label=format(total_cases, big.mark=",")), color="black")+
+  labs(title="Top 20 países con más casos reportados de COVID-19 de América")+
+  scale_y_continuous(breaks=c(100000, 250000, 500000, 750000, 1000000, 2500000, 4000000, 5000000),
+                     label=c("100k", "250k", "500k", "750k", "1m", "2.5m", "4m", "5m"))+
+  coord_flip() +
+  xlab("Países") +
+  theme_bw()+
+  theme(title = element_text(size=14, face="bold", colour = "black"),
+        axis.text.y = element_text(size=11, face="bold", colour = "black"),
+        axis.text.x = element_text(size=11, face="bold", colour = "black"))
+```
+
+### Ranking de países con total de casos confirmados de COVID-19 por millón de habitantes
+Para obtener el top 20 ordenamos los datos con la columna total_cases_per_million. Guardamos sólo los 20 países con más casos y los 20 países con menos casos. Finalmente, filtramos sólo las columnas que nos interesan. Y mostramos los datos en una tabla y en una gráfica de Barras horizontales. Cómo México no está en el top 20, lo agregamos al final con la posición correspondiente del ranking.
+<div class = "row">
+```{r results='hold'}
+ranking.total_cases_per_million <- covid.total.df[order(-covid.total.df$total_cases_per_million),]
+ranking.total_cases_per_million$position <- 1:nrow(ranking.total_cases_per_million)
+columnfilter <- c("position", "location", "total_cases_per_million")
+mexico.total_cases_per_million <- ranking.total_cases_per_million[
+                                  ranking.total_cases_per_million$location == "México", ]
+bottom20.total_cases_per_million <- tail(ranking.total_cases_per_million[, columnfilter],20)
+top20.total_cases_per_million <- head(ranking.total_cases_per_million[, columnfilter],20)
+mexico.total_cases_per_million <- mexico.total_cases_per_million[, columnfilter]
+rm(ranking.total_cases_per_million)
+rownames(top20.total_cases_per_million) <- c()
+rownames(bottom20.total_cases_per_million) <- c()
+rownames(mexico.total_cases_per_million) <- c()
+
+
+top20.total_cases_per_million <- rbind(top20.total_cases_per_million, mexico.total_cases_per_million)
+mexrow <- which(top20.total_cases_per_million$location=='Mexico')
+tablecolnames <- c("Posición", "País", "Casos")
+top20.total_cases_per_million$total_cases_per_million_formated <- formatC(
+  top20.total_cases_per_million$total_cases_per_million, format="f", big.mark=",", digits=2)
+bottom20.total_cases_per_million$total_cases_per_million_formated<- formatC(
+  bottom20.total_cases_per_million$total_cases_per_million, format="f", big.mark=",", digits=2)
+
+kable(top20.total_cases_per_million[,c(1,2,4)], format = "html", align = "clr", 
+      col.names=tablecolnames, caption="Top 20 - Países con más casos por millón de habitantes") %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"), 
+                full_width = F, position = "float_left") %>%
+  row_spec(mexrow, bold = T, color = "black", background = "yellow")
+
+kable(bottom20.total_cases_per_million[,c(1,2,4)], format = "html", align = "clr", 
+      col.names=tablecolnames, caption="Top 20 - Países con menos casos por millón de habitantes") %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"), 
+                full_width = F, position = "right")
+```
+</div>
+### Gráfica de barras horizontales con los 20 países con más casos reportados de COVID-19 por millón de habitantes (+ México)
+```{r fig.height=8, fig.width=15}
+ggplot(data=top20.total_cases_per_million, aes(x=reorder(paste(position, location),total_cases_per_million), 
+                                   y=total_cases_per_million, fill=location))+
+  geom_bar(stat = "identity", position=position_dodge(), colour="black", show.legend = FALSE)+
+  ylab("Número de Casos Reportados de COVID-19") +
+  geom_text(aes(y=max(total_cases_per_million)+1250, label=total_cases_per_million_formated), color="black")+
+  labs(title="Top 20 países con más casos reportados de COVID-19 por millón de habitantes (+ México)")+
+  coord_flip() +
+  xlab("Países") +
+  theme_bw()+
+  theme(title = element_text(size=14, face="bold", colour = "black"),
+        axis.text.y = element_text(size=11, face="bold", colour = "black"),
+        axis.text.x = element_text(size=11, face="bold", colour = "black"))
+```
+
+### Ranking de países con total de muertes atribuibles de COVID-19
+Para obtener el top 20 ordenamos los datos con la columna total_deaths. Guardamos sólo los 20 países con más casos y los 20 países con menos casos. Filtramos sólo las columnas que nos interesan. Finalmente, mostramos los datos en una tabla y en una gráfica de Barras horizontales.
+
+```{r results='hold'}
+ranking.total_deaths <- covid.total.df[order(-covid.total.df$total_deaths),]
+ranking.total_deaths <- ranking.total_deaths[ranking.total_deaths$location != "World", ]
+ranking.total_deaths$position <- 1:nrow(ranking.total_deaths)
+columnfilter <- c("position", "location", "total_deaths")
+bottom20.total_deaths <- tail(ranking.total_deaths[, columnfilter],20)
+top20.total_deaths <- head(ranking.total_deaths[, columnfilter],20)
+mexrow <- which(ranking.total_deaths$location=='Mexico')
+rm(ranking.total_deaths)
+rownames(top20.total_deaths) <- c()
+rownames(bottom20.total_deaths) <- c()
+
+tablecolnames <- c("Posición", "País", "Muertes")
+top20.total_deaths$total_deaths_formated <- formatC(top20.total_deaths$total_deaths, 
+                                                  format="f", big.mark=",", digits=0)
+bottom20.total_deaths$total_deaths_formated <- formatC(bottom20.total_deaths$total_deaths, 
+                                                     format="f", big.mark=",", digits=0)
+
+kable(top20.total_deaths[,c(1,2,4)], format = "html", align = "clr", 
+      col.names=tablecolnames, caption="Top 20 - Países con más muertes atribuibles a COVID-19") %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"), 
+                full_width = F, position = "float_left") %>%
+  row_spec(mexrow, bold = T, color = "black", background = "yellow")
+
+kable(bottom20.total_deaths[,c(1,2,4)], format = "html", align = "clr", 
+      col.names=tablecolnames, caption="Top 20 - Países con menos muertes atribuibles a COVID-19") %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"), 
+                full_width = F, position = "right")
+```
+### Gráfica de barras horizontales con los 20 países con más muertes atribuibles a COVID-19.
+```{r fig.height=8, fig.width=15}
+ggplot(data=top20.total_deaths, aes(x=reorder(paste(position, location),total_deaths), 
+                                   y=total_deaths, fill=location))+
+  geom_bar(stat = "identity", position=position_dodge(), colour="black", show.legend = FALSE)+
+  ylab("Número de muertes atribuibles a COVID-19") +
+  geom_text(aes(y=max(total_deaths)+7500, label=total_deaths_formated), color="black")+
+  labs(title="Top 20 países con más muertes atribuibles a COVID-19")+
+  scale_y_continuous(breaks=c(10000, 25000, 50000, 75000, 100000, 150000, 170000), 
+                     label=c("10k", "25k", "50k", "75k", "100k", "150k", "170k"))+
+  coord_flip() +
+  xlab("Países") +
+  theme_bw()+
+  theme(title = element_text(size=14, face="bold", colour = "black"),
+        axis.text.y = element_text(size=11, face="bold", colour = "black"),
+        axis.text.x = element_text(size=11, face="bold", colour = "black"))
+```
+
+### Ranking de países con total de muertes atribuibles de COVID-19 por millón de habitantes
+Para obtener el top 20 ordenamos los datos con la columna total_deaths_per_million. Guardamos sólo los 20 países con más casos y los 20 países con menos casos. Filtramos sólo las columnas que nos interesan. Finalmente, mostramos los datos en una tabla y en una gráfica de barras horizontales.
+
+```{r results='hold'}
+ranking.total_deaths_per_million <- covid.total.df[order(-covid.total.df$total_deaths_per_million),]
+ranking.total_deaths_per_million$position <- 1:nrow(ranking.total_deaths_per_million)
+columnfilter <- c("position", "location", "total_deaths_per_million")
+bottom20.total_deaths_per_million <- tail(ranking.total_deaths_per_million[, columnfilter],20)
+top20.total_deaths_per_million <- head(ranking.total_deaths_per_million[, columnfilter],20)
+mexrow <- which(ranking.total_deaths_per_million$location=='Mexico')
+rm(ranking.total_deaths_per_million)
+rownames(top20.total_deaths_per_million) <- c()
+rownames(bottom20.total_deaths_per_million) <- c()
+
+tablecolnames <- c("Posición", "País", "Muertes")
+top20.total_deaths_per_million$total_deaths_per_million_formated <- formatC(
+  top20.total_deaths_per_million$total_deaths_per_million, format="f", big.mark=",", digits=2)
+bottom20.total_deaths_per_million$total_deaths_per_million_formated <- formatC(
+  bottom20.total_deaths_per_million$total_deaths_per_million, format="f", big.mark=",", digits=2)
+
+kable(top20.total_deaths_per_million[,c(1,2,4)], format = "html", align = "clr", 
+      col.names=tablecolnames, 
+      caption="Top 20 - Países con más muertes atribuibles a COVID-19 por millón de habitantes") %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"), 
+                full_width = F, position = "float_left") %>%
+  row_spec(mexrow, bold = T, color = "black", background = "yellow")
+
+kable(bottom20.total_deaths_per_million[,c(1,2,4)], format = "html", align = "clr", 
+      col.names=tablecolnames, 
+      caption="Top 20 - Países con menos muertes atribuibles a COVID-19 por millón de habitantes") %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"), 
+                full_width = F, position = "right")
+```
+### Gráfica de barras horizontales con los 20 países con más muertes atribuibles a COVID-19 por millón de habitantes.
+```{r fig.height=8, fig.width=15}
+ggplot(data=top20.total_deaths_per_million, aes(x=reorder(paste(position, location),total_deaths_per_million), 
+                                   y=total_deaths_per_million, fill=location))+
+  geom_bar(stat = "identity", position=position_dodge(), colour="black", show.legend = FALSE)+
+  ylab("Número de muertes atribuibles a COVID-19 por millón de habitantes") +
+  geom_text(aes(y=max(total_deaths_per_million)+25, label=total_deaths_per_million_formated), color="black")+
+  labs(title="Top 20 países con más muertes atribuibles a COVID-19 por millón de habitantes")+
+  coord_flip() +
+  xlab("Países") +
+  theme_bw()+
+  theme(title = element_text(size=14, face="bold", colour = "black"),
+        axis.text.y = element_text(size=11, face="bold", colour = "black"),
+        axis.text.x = element_text(size=11, face="bold", colour = "black"))
+```
+
+## Tendencias
+
+### Tendencias de nuevos contagios de los 5 países con más casos reportados de COVID-19 + México
+Gráfica creada desde la fecha inicial del conjunto de datos:
+```{r fig.height=8, fig.width=15, warning=FALSE}
+plot.trend.new_cases <- function(startdate, enddate, countries, graphtitle){
+  tmp.df <- covid.df[covid.df$location %in% countries,]
+  tmp.df <- tmp.df[tmp.df$date >= startdate,]
+  tmp.df <- tmp.df[tmp.df$date <= enddate,]
+  ggplot(data=tmp.df , aes(x=date, y=new_cases, group=location, colour=location)) +
+    geom_line(size=1) +
+    scale_color_discrete(name = "Países")+
+    scale_x_date(date_breaks = "month", date_labels = "%B")+
+    ggtitle(graphtitle)+
+    ylab("Nuevos casos de COVID-19")+
+    xlab("Fecha")+
+    theme_bw()+
+    theme(title = element_text(size=14, face="bold", colour = "black"),
+          axis.text.y = element_text(size=11, face="bold", colour = "black"), 
+          axis.text.x = element_text(size=11, face="bold", colour = "black"),
+          legend.position = "bottom",
+          legend.title = element_text(size = 14),
+          legend.text = element_text(size = 13),
+          legend.key.width = unit(1.5,"cm"))+
+    guides(colour = guide_legend(override.aes = list(size=2)))
+}
+top5.total_cases <- c(head(as.character(top20.total_cases$location),5), "México")
+plot.trend.new_cases(startdate, enddate, top5.total_cases, "Tendencia de contagios de Covid-19 por países de enero a agosto")
+```
+Podemos observar que las líneas empiezan a subir a partir de marzo. Modificamos la gráfica con diversas fechas de inicio. Por ejemplo, con los datos a partir de marzo:
+```{r fig.height=8, fig.width=15, warning=FALSE}
+plot.trend.new_cases("2020-03-01", enddate, top5.total_cases, "Tendencia de contagios de Covid-19 por países de marzo a agosto")
+```
+
+```{r fig.height=8, fig.width=15, warning=FALSE}
+plot.trend.new_cases("2020-06-01", enddate, top5.total_cases, "Tendencia de contagios de Covid-19 por países de junio a agosto")
+```
+
+
+```{r fig.height=8, fig.width=15, warning=FALSE}
+plot.trend.new_cases("2020-07-01", enddate, top5.total_cases, "Tendencia de contagios de Covid-19 por países de julio a agosto")
+```
+
+
+```{r fig.height=8, fig.width=15, warning=FALSE}
+plot.trend.new_cases <- function(startdate, enddate, countries, graphtitle){
+  tmp.df <- covid.df[covid.df$location %in% countries,]
+  tmp.df <- tmp.df[tmp.df$date >= startdate,]
+  tmp.df <- tmp.df[tmp.df$date <= enddate,]
+  ggplot(data=tmp.df , aes(x=date, y=new_cases, group=location, colour=location)) +
+    geom_line(size=1) +
+    scale_color_discrete(name = "Países")+
+    scale_x_date(date_breaks = "day", date_labels = "%b %d")+
+    ggtitle(graphtitle)+
+    ylab("Nuevos casos de COVID-19")+
+    xlab("Fecha")+
+    theme_bw()+
+    theme(title = element_text(size=14, face="bold", colour = "black"),
+          axis.text.y = element_text(size=11, face="bold", colour = "black"), 
+          axis.text.x = element_text(size=11, face="bold", colour = "black"),
+          legend.position = "bottom",
+          legend.title = element_text(size = 14),
+          legend.text = element_text(size = 13),
+          legend.key.width = unit(1.5,"cm"))+
+    guides(colour = guide_legend(override.aes = list(size=2)))
+}
+plot.trend.new_cases(enddate-14, enddate, top5.total_cases, "Tendencia de contagios de Covid-19 por países de las últimas dos semanas")
+```
+
+### Tendencias de nuevas muertes por covid de los 5 países con más casos reportados + México
+Gráfica creada desde la fecha inicial del conjunto de datos:
+```{r fig.height=8, fig.width=15, warning=FALSE}
+plot.trend.new_deaths <- function(startdate, enddate, countries, graphtitle){
+  tmp.df <- covid.df[covid.df$location %in% countries,]
+  tmp.df <- tmp.df[tmp.df$date >= startdate,]
+  tmp.df <- tmp.df[tmp.df$date <= enddate,]
+  ggplot(data=tmp.df , aes(x=date, y=new_deaths, group=location, colour=location)) +
+    geom_line(size=1) +
+    scale_color_discrete(name = "Países")+
+    scale_x_date(date_breaks = "month", date_labels = "%B")+
+    ggtitle(graphtitle)+
+    ylab("Nuevos muertes atribuibles a COVID-19")+
+    xlab("Fecha")+
+    theme_bw()+
+    theme(title = element_text(size=14, face="bold", colour = "black"),
+          axis.text.y = element_text(size=11, face="bold", colour = "black"), 
+          axis.text.x = element_text(size=11, face="bold", colour = "black"),
+          legend.position = "bottom",
+          legend.title = element_text(size = 14),
+          legend.text = element_text(size = 13),
+          legend.key.width = unit(1.5,"cm"))+
+    guides(colour = guide_legend(override.aes = list(size=2)))
+}
+top5.total_cases <- c(head(as.character(top20.total_cases$location),5), "México")
+plot.trend.new_deaths(startdate, enddate, top5.total_cases, "Tendencia de nuevas muertes atribuidas a Covid-19 por países de enero a agosto")
+```
+Gráfica con los datos a partir de marzo:
+```{r fig.height=8, fig.width=15, warning=FALSE}
+plot.trend.new_deaths("2020-03-01", enddate, top5.total_cases, "Tendencia de nuevas muertes atribuidas a Covid-19 de marzo a agosto")
+```
+
+```{r fig.height=8, fig.width=15, warning=FALSE}
+plot.trend.new_deaths("2020-06-01", enddate, top5.total_cases, "Tendencia de nuevas muertes atribuidas a Covid-19 por países de junio a agosto")
+```
+
+
+```{r fig.height=8, fig.width=15, warning=FALSE}
+plot.trend.new_deaths("2020-07-01", enddate, top5.total_cases, "Tendencia de nuevas muertes atribuidas a Covid-19 por países de julio a agosto")
+```
+
+```{r fig.height=8, fig.width=15, warning=FALSE}
+plot.trend.new_deaths <- function(startdate, enddate, countries, graphtitle){
+  tmp.df <- covid.df[covid.df$location %in% countries,]
+  tmp.df <- tmp.df[tmp.df$date >= startdate,]
+  tmp.df <- tmp.df[tmp.df$date <= enddate,]
+  ggplot(data=tmp.df , aes(x=date, y=new_deaths, group=location, colour=location)) +
+    geom_line(size=1) +
+    scale_color_discrete(name = "Países")+
+    scale_x_date(date_breaks = "day", date_labels = "%b %d")+
+    ggtitle(graphtitle)+
+    ylab("Nuevos casos de COVID-19")+
+    xlab("Fecha")+
+    theme_bw()+
+    theme(title = element_text(size=14, face="bold", colour = "black"),
+        axis.text.y = element_text(size=11, face="bold", colour = "black"),
+        axis.text.x = element_text(size=11, face="bold", colour = "black"),
+        legend.position = "bottom",
+        legend.title = element_text(size = 14),
+        legend.text = element_text(size = 13),
+        legend.key.width = unit(1.5,"cm"))+
+        guides(colour = guide_legend(override.aes = list(size=2)))
+}
+plot.trend.new_deaths(enddate-14, enddate, top5.total_cases, "Tendencia de nuevas muertes atribuidas a Covid-19 por países de las últimas dos semanas")
+```
+
+### Curvas de contagios acumulados de COVID-19 de los 5 países con más casos reportados + México
+```{r fig.height=8, fig.width=15, warning=FALSE}
+plot.trend.total_cases <- function(startdate, enddate, countries, graphtitle){
+  tmp.df <- covid.df[covid.df$location %in% countries,]
+  tmp.df <- tmp.df[tmp.df$date >= startdate,]
+  tmp.df <- tmp.df[tmp.df$date <= enddate,]
+  ggplot(data=tmp.df , aes(x=date, y=total_cases, group=location, colour=location)) +
+    geom_line(size=1) +
+    scale_color_discrete(name = "Países")+
+    scale_x_date(date_breaks = "month", date_labels = "%B")+
+    ggtitle(graphtitle)+
+    ylab("Casos acumulados de COVID-19")+
+    xlab("Fecha")+
+    theme_bw()+
+    theme(title = element_text(size=14, face="bold", colour = "black"),
+        axis.text.y = element_text(size=11, face="bold", colour = "black"),
+        axis.text.x = element_text(size=11, face="bold", colour = "black"),
+        legend.position = "bottom",
+        legend.title = element_text(size = 14),
+        legend.text = element_text(size = 13),
+        legend.key.width = unit(1.5,"cm"))+
+        guides(colour = guide_legend(override.aes = list(size=2)))
+}
+plot.trend.total_cases(startdate, enddate, top5.total_cases, "Curvas de contagios acumulados de COVID-19 de los 5 países con más contagios reportados ")
+```
+
+
+Gráfica con los datos a partir de marzo:
+```{r fig.height=8, fig.width=15, warning=FALSE}
+plot.trend.total_cases("2020-03-01", enddate, top5.total_cases, "Curvas de contagios acumulados de COVID-19 de los 5 países con más contagios reportados de marzo a agosto")
+```
+
+```{r fig.height=8, fig.width=15, warning=FALSE}
+plot.trend.total_cases("2020-06-01", enddate, top5.total_cases, "Curvas de contagios acumulados de COVID-19 de los 5 países con más contagios reportados de junio a agosto")
+```
+
+```{r fig.height=8, fig.width=15, warning=FALSE}
+plot.trend.total_cases("2020-07-01", enddate, top5.total_cases, "Curvas de contagios acumulados de COVID-19 de los 5 países con más contagios reportados de julio a agosto")
+```
+
+La cantidad de contagios que tienen Estados Unidos y Brasil no me permiten apreciar las curvas del resto de los países. Quitamos a esos 2 países y agregamos a los 2 países que sigan en el top 20 de países con más contagios reportados.
+```{r fig.height=8, fig.width=15, warning=FALSE}
+total_cases.others <- as.character(top20.total_cases$location)[3:7]
+plot.trend.total_cases("2020-07-01", enddate, total_cases.others, "Curvas de contagios acumulados de COVID-19 reportados de julio a agosto")
+```
+
+```{r fig.height=8, fig.width=15, warning=FALSE}
+plot.trend.total_cases <- function(startdate, enddate, countries, graphtitle){
+  tmp.df <- covid.df[covid.df$location %in% countries,]
+  tmp.df <- tmp.df[tmp.df$date >= startdate,]
+  tmp.df <- tmp.df[tmp.df$date <= enddate,]
+  ggplot(data=tmp.df , aes(x=date, y=total_cases, group=location, colour=location)) +
+    geom_line(size=1) +
+    scale_color_discrete(name = "Países")+
+    scale_x_date(date_breaks = "day", date_labels = "%b %d")+
+    ggtitle(graphtitle)+
+    ylab("Casos acumulados de COVID-19")+
+    xlab("Fecha")+
+    theme_bw()+
+    theme(title = element_text(size=14, face="bold", colour = "black"),
+        axis.text.y = element_text(size=11, face="bold", colour = "black"),
+        axis.text.x = element_text(size=11, face="bold", colour = "black"),
+        legend.position = "bottom",
+        legend.title = element_text(size = 14),
+        legend.text = element_text(size = 13),
+        legend.key.width = unit(1.5,"cm"))+
+        guides(colour = guide_legend(override.aes = list(size=2)))
+}
+plot.trend.total_cases(enddate-14, enddate, total_cases.others, "Curvas de contagios acumulados de COVID-19 reportados las últimas dos semanas")
+```
+
+Quitamos a India y Rusia, para ver más a detalle las curvas de contagio acumulado de México, perú y Sudáfrica de las últimas dos semanas:
+```{r fig.height=8, fig.width=15, warning=FALSE}
+total_cases.others <- as.character(top20.total_cases$location)[3:7]
+total_cases.others <- total_cases.others[c(-1,-2)]
+countrieslabels <- paste(total_cases.others, collapse = ', ')
+plot.trend.total_cases(enddate-14, enddate, total_cases.others, paste("Curvas de contagios acumulados de COVID-19 reportados las últimas dos semanas",countrieslabels))
+```
+
+### Curvas de muertes acumuladas por COVID-19 de los 5 países con más muertes reportadas + México
+```{r fig.height=8, fig.width=15, warning=FALSE}
+plot.trend.total_deaths <- function(startdate, enddate, countries, graphtitle){
+  tmp.df <- covid.df[covid.df$location %in% countries,]
+  tmp.df <- tmp.df[tmp.df$date >= startdate,]
+  tmp.df <- tmp.df[tmp.df$date <= enddate,]
+  ggplot(data=tmp.df , aes(x=date, y=total_deaths, group=location, colour=location)) +
+    geom_line(size=1) +
+    scale_color_discrete(name = "Países")+
+    scale_x_date(date_breaks = "month", date_labels = "%B")+
+    ggtitle(graphtitle)+
+    ylab("Muertes acumulados por COVID-19")+
+    xlab("Fecha")+
+    theme_bw()+
+    theme(title = element_text(size=14, face="bold", colour = "black"),
+        axis.text.y = element_text(size=11, face="bold", colour = "black"),
+        axis.text.x = element_text(size=11, face="bold", colour = "black"),
+        legend.position = "bottom",
+        legend.title = element_text(size = 14),
+        legend.text = element_text(size = 13),
+        legend.key.width = unit(1.5,"cm"))+
+        guides(colour = guide_legend(override.aes = list(size=2)))
+}
+top5.total_deaths <-  head(as.character(top20.total_deaths$location),5)
+plot.trend.total_deaths(startdate, enddate, top5.total_deaths, "Curvas de muertes acumuladas de COVID-19 de los 5 países con más muertes reportadas en total ")
+```
+
+
+Gráfica con los datos a partir de marzo:
+```{r fig.height=8, fig.width=15, warning=FALSE}
+plot.trend.total_deaths("2020-03-01", enddate, top5.total_deaths, "Curvas de muertes acumuladas por COVID-19 de marzo a agosto de los 5 países con más muertes reportadas en total")
+```
+
+```{r fig.height=8, fig.width=15, warning=FALSE}
+plot.trend.total_deaths("2020-06-01", enddate, top5.total_deaths, "Curvas de muertes acumuladas por COVID-19 de junio a agosto de los 5 países con más muertes reportadas en total")
+```
+
+```{r fig.height=8, fig.width=15, warning=FALSE}
+plot.trend.total_deaths("2020-07-01", enddate, top5.total_deaths, "Curvas de muertes acumuladas por COVID-19 de julio a agosto de los 5 países con más muertes reportadas en total")
+```
+
+La cantidad de contagios que tienen Estados Unidos y Brasil no permiten apreciar las curvas del resto de los países. Quitamos a esos 2 países y agregamos a los 2 países que sigan en el top 20 de países con más contagios reportados.
+```{r fig.height=8, fig.width=15, warning=FALSE}
+total_deaths.others <- as.character(top20.total_deaths$location)[3:7]
+plot.trend.total_deaths("2020-07-01", enddate, total_deaths.others, "Curvas de contagios acumulados de COVID-19 reportados de julio a agosto")
+```
+
+```{r fig.height=8, fig.width=15, warning=FALSE}
+plot.trend.total_deaths <- function(startdate, enddate, countries, graphtitle){
+  tmp.df <- covid.df[covid.df$location %in% countries,]
+  tmp.df <- tmp.df[tmp.df$date >= startdate,]
+  tmp.df <- tmp.df[tmp.df$date <= enddate,]
+  ggplot(data=tmp.df , aes(x=date, y=total_deaths, group=location, colour=location)) +
+    geom_line(size=1) +
+    scale_color_discrete(name = "Países")+
+    scale_x_date(date_breaks = "day", date_labels = "%b %d")+
+    ggtitle(graphtitle)+
+    ylab("Muertes acumulados por COVID-19")+
+    xlab("Fecha")+
+    theme_bw()+
+    theme(title = element_text(size=14, face="bold", colour = "black"),
+        axis.text.y = element_text(size=11, face="bold", colour = "black"),
+        axis.text.x = element_text(size=11, face="bold", colour = "black"),
+        legend.position = "bottom",
+        legend.title = element_text(size = 14),
+        legend.text = element_text(size = 13),
+        legend.key.width = unit(1.5,"cm"))+
+        guides(colour = guide_legend(override.aes = list(size=2)))
+}
+plot.trend.total_deaths(enddate-14, enddate, total_deaths.others, "Curvas de contagios acumulados de COVID-19 reportados de las últimas dos semanas")
+```
+
+Las curvas de Francia, Italia y Reino Unido están planas, se ha estancado la cantidad de muertes atribuidas a COVID-19. Una posible razón es que la pandemia inició primero en Europa. Las curvas de México e India siguen en aumento. Quitamos esos países y agregamos otros en donde al parecer la cantidad de muertes atribuidas a COVID-19 aún sigue en aumento, y generamos la gráfica de las curvas de las últimas 2 semanas sin contar a Estados Unidos y Brasil:
+```{r fig.height=8, fig.width=15, warning=FALSE}
+total_deaths.others <- as.character(top20.total_deaths$location)[c(3,5,8,9,10)]
+countrieslabels <- paste(total_deaths.others, collapse = ', ')
+plot.trend.total_deaths(enddate-14, enddate, total_deaths.others, paste("Curvas de muertes acumuladas por COVID-19 reportadas las últimas dos semanas:",countrieslabels))
+```
