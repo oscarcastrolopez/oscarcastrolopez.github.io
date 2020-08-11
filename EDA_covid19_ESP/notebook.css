@@ -1,0 +1,64 @@
+h1.title {
+  font-size: 38px;
+  text-align: center;
+  font-weight: bold;
+}
+h4.author { /* Header 4 - and the author and data headers use this too  */
+  font-size: 18px;
+  text-align: center;
+  font-weight: bold;
+}
+h4.date { /* Header 4 - and the author and data headers use this too  */
+  font-size: 18px;
+  text-align: center;
+}
+body{
+  font-family: Helvetica;
+  font-size: 12pt;
+}
+
+.modal {
+  text-align: center;
+  padding: 0!important;
+}
+
+.modal:before {
+  content: '';
+  display: inline-block;
+  height: 100%;
+  vertical-align: middle;
+  margin-right: -4px;
+}
+
+.modal-dialog {
+  display: inline-block;
+  text-align: left;
+  vertical-align: middle;
+}
+
+@media (min-width: 768px) {
+  .fullscreen-modal .modal-dialog {
+    width: 750px;
+    display: inline-block;
+  text-align: left;
+  vertical-align: middle;
+  }
+}
+@media (min-width: 992px) {
+  .fullscreen-modal .modal-dialog {
+    width: 970px;
+    display: inline-block;
+  text-align: left;
+  vertical-align: middle;
+  }
+}
+
+@media (min-width: 1200px) {
+  .fullscreen-modal .modal-dialog {
+    width: 1170px;
+    display: inline-block;
+    text-align: left;
+    vertical-align: middle;
+  }
+
+}
