@@ -4,4 +4,4 @@
 
 ***
 
-#### * [EDA 11-08-2020](https://oscarcastrolopez.github.io/EDA_covid19_ESP/notebook_covid19_esp_11-08-2020.html)
+#### <a href="https://oscarcastrolopez.github.io/EDA_covid19_ESP/notebook_covid19_esp_11-08-2020.html" target="_blank">EDA 11 de Agosto de 2020</a>
