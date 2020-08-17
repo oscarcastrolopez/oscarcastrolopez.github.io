@@ -1,5 +1,5 @@
 ---
-title: "Análisis Exploratorio de Datos (EDA) Covid-19"
+title: "Análisis Exploratorio de Datos (EDA) COVID-19"
 author: "Oscar Castro"
 date: '`r format(Sys.Date(), "%A, %d de %B de %Y")`'
 output:
@@ -53,7 +53,7 @@ plotscaption <- "oscarcastrolopez.github.io"
 str(covid.df)
 ```
 
-La descripción de cada una de las variables de este conjunto de datos se encuentra en el sitio: <https://github.com/owid/covid-19-data/blob/master/public/data/owid-covid-data-codebook.md>.
+La descripción de cada una de las variables de este conjunto de datos se encuentra en el sitio: <https://github.com/owid/covid-19-data/blob/master/public/data/owid-covid-codebook.csv>.
 
 Ajuste de la columna date que es tipo *factor* a tipo *date*:
 ```{r Convert column date from factor do date}
@@ -105,14 +105,14 @@ covid.total.df$location <- droplevels.factor(covid.total.df$location)
 print(names(covid.total.df)[c(5,7,9,11)])
 ```
 
-Al filtrar los países que tienen al menos 1 millón de habitantes, el conjunto de datos ahora tiene: **`r length(levels(covid.total.df$location))` Países**.
+Al descartar los países que tienen al menos 1 millón de habitantes, el conjunto de datos ahora tiene: **`r length(levels(covid.total.df$location))` Países**.
 
 Para cada una de las variables con totales, se obtienen los 20 países con el valor más alto y los 20 países con el valor más bajo. En caso de que México no se encuentre en los primeros 20 países, se agrega en la lista indicando la posición que le toca tomando en cuenta todos los países. Para cada variable a analizar se hace lo siguiente en R:
 
 1. Se ordenan los datos con la columna correspondiente y se guarda en un nuevo *dataframe*.
-2. Se guardan sólo los países con más casos y los 20 países con menos casos.
-3. Se filtran las cólumnas de interés.
-4. Se muestran los datos en una tabla y un una gráfica de barras horizontales.
+2. Se guardan sólo los 20 países con los valores más altos y los 20 países con valores más bajos.
+3. Se filtran las cólumnas de interés, el resto de columnas se descarta. Adicionalmente, se agrega una nueva columna indicando con un valor numérico la posición en la que se encuentra el país en el ranking.
+4. Se muestran los datos en una tabla y una gráfica de barras horizontales.
 
 ## Ranking de países: Total de casos reportados de COVID-19 con la columna *total_cases* {.tabset .tabset-fade}
 
@@ -165,11 +165,11 @@ ggplot(data=top20.total_cases, aes(x=reorder(paste(position, location),total_cas
                 label=total_cases_formated,
                 fontface="bold"), 
             color="black")+
-  labs(title="Top 20 países con más casos de COVID-19", 
+  labs(title="Top 20 de los países con más casos de COVID-19", 
        subtitle = todayformatted,
        caption = plotscaption)+
-  scale_y_continuous(breaks=c(100000, 250000, 500000, 750000, 1000000, 2500000, 4000000, 5000000),
-                     label=c("100k", "250k", "500k", "750k", "1m", "2.5m", "4m", "5m"))+
+  scale_y_continuous(breaks=c(100000, 500000, 750000, 1000000, 2000000, 3000000, 4000000, 5000000),
+                     label=c("100k", "500k", "750k", "1m", "2m", "3m", "4m", "5m"))+
   coord_flip() +
   xlab("Países") +
   theme_bw()+
@@ -225,11 +225,11 @@ ggplot(data=top20.total_cases.america, aes(x=reorder(paste(position, location),t
                 label=format(total_cases, big.mark=","),
                 fontface="bold"), 
             color="black")+
-  labs(title="Top 20 países con más casos de COVID-19 de América", 
+  labs(title="Top 20 de los países con más casos de COVID-19 de América", 
        subtitle = todayformatted,
        caption = plotscaption)+
-  scale_y_continuous(breaks=c(100000, 250000, 500000, 750000, 1000000, 2500000, 4000000, 5000000),
-                     label=c("100k", "250k", "500k", "750k", "1m", "2.5m", "4m", "5m"))+
+  scale_y_continuous(breaks=c(100000, 500000, 750000, 1000000, 2000000, 3000000, 4000000, 5000000),
+                     label=c("100k", "500k", "750k", "1m", "2m", "3m", "4m", "5m"))+
   coord_flip() +
   xlab("Países") +
   theme_bw()+
@@ -295,7 +295,7 @@ ggplot(data=top20.total_cases_per_million,
                 label=total_cases_per_million_formated,
                 fontface="bold"), 
             color="black")+
-  labs(title="Top 20 países con más casos reportados de COVID-19 por millón de habitantes (+ México)",
+  labs(title="Top 20 de los países con más casos reportados de COVID-19 por millón de habitantes (+ México)",
        subtitle = todayformatted,
        caption = plotscaption)+
   coord_flip() +
@@ -355,7 +355,7 @@ ggplot(data=top20.total_deaths,
                 label=total_deaths_formated,
                 fontface="bold"), 
             color="black")+
-  labs(title="Top 20 países con más muertes por COVID-19",
+  labs(title="Top 20 de los países con más muertes por COVID-19",
        subtitle = todayformatted,
        caption = plotscaption)+
   scale_y_continuous(breaks=c(10000, 25000, 50000, 75000, 100000, 150000, 170000), 
@@ -421,7 +421,7 @@ ggplot(data=top20.total_deaths_per_million,
                 label=total_deaths_per_million_formated,
                 fontface="bold"),
             color="black")+
-  labs(title="Top 20 países con más muertes por COVID-19 por millón de habitantes",
+  labs(title="Top 20 de los países con más muertes por COVID-19 por millón de habitantes",
        subtitle = todayformatted,
        caption = plotscaption)+
   coord_flip() +
@@ -436,7 +436,7 @@ ggplot(data=top20.total_deaths_per_million,
 
 ## Nuevos contagios de los 5 países con más casos reportados de COVID-19 + México {.tabset .tabset-fade}
 
-Se crean funciones para generar los gráficos valores acumulados.
+Las siguientes funciones son para facilitar la creación de las gráficas de líneas.
 ```{r}
 ##Line plot of new_cases with date breaks by month
 plot.trend.new_cases.month <- function(startdate, enddate, countries, graphtitle, graphsubtitle){
@@ -488,13 +488,13 @@ plot.trend.new_cases.monthday <- function(startdate, enddate, countries, graphti
 }
 ```
 
-Gráficas con rangos de fechas. Las fechas iniciales son distitnas, fecha final siempre es el día `r todayformatted`.
+Gráficas con rangos de fechas. Las fechas iniciales son distintas, la fecha final siempre es el día `r todayformatted`.
 
 ### Todo
 ```{r Function to plot trends: new_cases, fig.height=8, fig.width=15, warning=FALSE, wrap = 'div', out.extra="class=img-zoomable"}
 top5.total_cases <- c(head(as.character(top20.total_cases$location),5), "Mexico")
 sublabel.tmp <- paste("Rango:", format(startdate, "%d/%m/%Y"),"-", format(enddate, "%d/%m/%Y"))
-plot.trend.new_cases.month(startdate, enddate, top5.total_cases, "Tendencia de contagios de Covid-19", sublabel.tmp)
+plot.trend.new_cases.month(startdate, enddate, top5.total_cases, "Tendencia de contagios de COVID-19", sublabel.tmp)
 ```
 
 ### -5 Meses
@@ -504,7 +504,7 @@ mes.tmp <- ifelse(mes.tmp < 10, paste0("0",mes.tmp), mes.tmp)
 startdate.tmp <- paste0("2020-", mes.tmp, "-01")
 startdate.tmp <- as.Date(startdate.tmp)
 sublabel.tmp <- paste("Rango:", format(startdate.tmp, "%d/%m/%Y"),"-", format(enddate, "%d/%m/%Y"))
-plot.trend.new_cases.month(startdate.tmp, enddate, top5.total_cases, "Tendencia de contagios de Covid-19", sublabel.tmp)
+plot.trend.new_cases.month(startdate.tmp, enddate, top5.total_cases, "Tendencia de contagios de COVID-19", sublabel.tmp)
 ```
 
 ### -3 Meses
@@ -514,7 +514,7 @@ mes.tmp <- ifelse(mes.tmp < 10, paste0("0",mes.tmp), mes.tmp)
 startdate.tmp <- paste0("2020-", mes.tmp, "-01")
 startdate.tmp <- as.Date(startdate.tmp)
 sublabel.tmp <- paste("Rango:", format(startdate.tmp, "%d/%m/%Y"),"-", format(enddate, "%d/%m/%Y"))
-plot.trend.new_cases.month(startdate.tmp, enddate, top5.total_cases, "Tendencia de contagios de Covid-19", sublabel.tmp)
+plot.trend.new_cases.month(startdate.tmp, enddate, top5.total_cases, "Tendencia de contagios de COVID-19", sublabel.tmp)
 ```
 
 ### -2 Meses
@@ -524,7 +524,7 @@ mes.tmp <- ifelse(mes.tmp < 10, paste0("0",mes.tmp), mes.tmp)
 startdate.tmp <- paste0("2020-", mes.tmp, "-01")
 startdate.tmp <- as.Date(startdate.tmp)
 sublabel.tmp <- paste("Rango:", format(startdate.tmp, "%d/%m/%Y"),"-", format(enddate, "%d/%m/%Y"))
-plot.trend.new_cases.month(startdate.tmp, enddate, top5.total_cases, "Tendencia de contagios de Covid-19", sublabel.tmp)
+plot.trend.new_cases.month(startdate.tmp, enddate, top5.total_cases, "Tendencia de contagios de COVID-19", sublabel.tmp)
 ```
 
 ### -1 Mes
@@ -534,19 +534,19 @@ mes.tmp <- ifelse(mes.tmp < 10, paste0("0",mes.tmp), mes.tmp)
 startdate.tmp <- paste0("2020-", mes.tmp, "-01")
 startdate.tmp <- as.Date(startdate.tmp)
 sublabel.tmp <- paste("Rango:", format(startdate.tmp, "%d/%m/%Y"),"-", format(enddate, "%d/%m/%Y"))
-plot.trend.new_cases.month(startdate.tmp, enddate, top5.total_cases, "Tendencia de contagios de Covid-19", sublabel.tmp)
+plot.trend.new_cases.month(startdate.tmp, enddate, top5.total_cases, "Tendencia de contagios de COVID-19", sublabel.tmp)
 ```
 
 ### -3 Semanas
 ```{r fig.height=8, fig.width=15, warning=FALSE, wrap = 'div', out.extra="class=img-zoomable"}
 sublabel.tmp <- paste("Rango:", format(enddate-21, "%d/%m/%Y"),"-", format(enddate, "%d/%m/%Y"))
-plot.trend.new_cases.monthday(enddate-21, enddate, top5.total_cases, "Tendencia de contagios de Covid-19", sublabel.tmp)
+plot.trend.new_cases.monthday(enddate-21, enddate, top5.total_cases, "Tendencia de contagios de COVID-19", sublabel.tmp)
 ```
 
 ### -2 Semanas
 ```{r fig.height=8, fig.width=15, warning=FALSE, wrap = 'div', out.extra="class=img-zoomable"}
 sublabel.tmp <- paste("Rango:", format(enddate-14, "%d/%m/%Y"),"-", format(enddate, "%d/%m/%Y"))
-plot.trend.new_cases.monthday(enddate-14, enddate, top5.total_cases, "Tendencia de contagios de Covid-19", sublabel.tmp)
+plot.trend.new_cases.monthday(enddate-14, enddate, top5.total_cases, "Tendencia de contagios de COVID-19", sublabel.tmp)
 ```
 
 ## Nuevas muertes de los 5 países con más casos reportados de COVID-19 + México {.tabset .tabset-fade}
@@ -609,7 +609,7 @@ Gráficas con rangos de fechas. Las fechas iniciales son distitnas, fecha final 
 ```{r fig.height=8, fig.width=15, warning=FALSE, wrap = 'div', out.extra="class=img-zoomable"}
 top5.total_cases <- c(head(as.character(top20.total_cases$location),5), "Mexico")
 sublabel.tmp <- paste("Rango:", format(startdate, "%d/%m/%Y"),"-", format(enddate, "%d/%m/%Y"))
-title.tmp <- "Tendencia de nuevas muertes por Covid-19"
+title.tmp <- "Tendencia de nuevas muertes por COVID-19"
 plot.trend.new_deaths.month(startdate, enddate, top5.total_cases, title.tmp, sublabel.tmp)
 ```
 
@@ -730,7 +730,7 @@ plot.trend.total_cases.monthdays <- function(startdate, enddate, countries, grap
 ### Todo
 ```{r fig.height=8, fig.width=15, warning=FALSE, wrap = 'div', out.extra="class=img-zoomable"}
 sublabel.tmp <- paste("Rango:", format(startdate, "%d/%m/%Y"),"-", format(enddate, "%d/%m/%Y"))
-title.tmp <- "Contagios acumulados de Covid-19"
+title.tmp <- "Contagios acumulados de COVID-19"
 plot.trend.total_cases.month(startdate, enddate, top5.total_cases, title.tmp, sublabel.tmp)
 ```
 
@@ -776,7 +776,7 @@ plot.trend.total_cases.month(startdate.tmp, enddate, top5.total_cases, title.tmp
 
 ### -1 Mes TOP[3:7]
 
-La cantidad de contagios que tienen Estados Unidos y Brasil no permiten apreciar las curvas del resto de los países. Quitamos a esos 2 países y agregamos a los 2 países que sigan en el top 20 de países con más contagios reportados.
+La cantidad de contagios que tienen Estados Unidos y Brasil no permiten apreciar las curvas del resto de los países. Se eliminan esos 2 países y se agregan los 2 países que se encuentran en la posición 6 y 7 del ranking de los países con más contagios reportados.
 
 ```{r fig.height=8, fig.width=15, warning=FALSE, wrap = 'div', out.extra="class=img-zoomable"}
 mes.tmp <- as.numeric(format(enddate, "%m"))-1
@@ -875,7 +875,7 @@ plot.trend.total_deaths.monthdays <- function(startdate, enddate, countries, gra
 ```{r fig.height=8, fig.width=15, warning=FALSE, wrap = 'div', out.extra="class=img-zoomable"}
 top5.total_deaths <-  head(as.character(top20.total_deaths$location),5)
 sublabel.tmp <- paste("Rango:", format(startdate, "%d/%m/%Y"),"-", format(enddate, "%d/%m/%Y"))
-title.tmp <- "Muertes acumuladas por Covid-19"
+title.tmp <- "Muertes acumuladas por COVID-19"
 plot.trend.total_deaths.month(startdate, enddate, top5.total_deaths, title.tmp, sublabel.tmp)
 ```
 
@@ -920,7 +920,7 @@ plot.trend.total_deaths.month(startdate.tmp, enddate, top5.total_deaths, title.t
 ```
 
 ### -1 Mes TOP[3:7]
-La cantidad de contagios que tienen Estados Unidos y Brasil no permiten apreciar las curvas del resto de los países. Se quita a esos 2 países y se agrega a los 2 países que sigan en el ranking de países con más muertes totales.
+La cantidad de muertes que tienen Estados Unidos y Brasil no permiten apreciar las curvas del resto de los países. Se quita a esos 2 países y se agrega a los 2 países que sigan en el ranking de países con más muertes totales.
 ```{r fig.height=8, fig.width=15, warning=FALSE, wrap = 'div', out.extra="class=img-zoomable"}
 mes.tmp <- as.numeric(format(enddate, "%m"))-1
 mes.tmp <- ifelse(mes.tmp < 10, paste0("0",mes.tmp), mes.tmp)
@@ -1017,7 +1017,7 @@ covid.mexico.total <- covid.mexico[,c("date", "total_cases", "total_deaths")]
 covid.mexico.total.lf <-melt(covid.mexico.total, id.vars = c("date"))
 ggplot(data=covid.mexico.total.lf , aes(x=date, y=value, group=variable, colour=variable)) +
     geom_line(size=1) +
-    scale_color_discrete(name = "Indicador", labels=c("Nuevos Contagios", "Nuevas Muertes"))+
+    scale_color_discrete(name = "Indicador", labels=c("Contagios", "Muertes"))+
     scale_x_date(date_breaks = "week", date_labels = "%b %d")+
     scale_y_continuous(breaks=c(50000, 100000, 200000, 300000, 400000, 500000, 750000),
                      label=c("50k","100k", "200k", "300k", "400k", "500k", "750k"))+
@@ -1043,7 +1043,7 @@ covid.mexico.total.lasttmonth <- covid.mexico.total[covid.mexico.total$date >= e
 covid.mexico.total.lasttmonth.lf <- melt(covid.mexico.total.lasttmonth, id.vars = c("date"))
 ggplot(data=covid.mexico.total.lasttmonth.lf , aes(x=date, y=value, group=variable, colour=variable)) +
     geom_line(size=1) +
-    scale_color_discrete(name = "Indicador", labels=c("Nuevos Contagios", "Nuevas Muertes"))+
+    scale_color_discrete(name = "Indicador", labels=c("Contagios", "Muertes"))+
     scale_x_date(date_breaks = "week", date_labels = "%b %d")+
     scale_y_continuous(breaks=c(50000, 100000, 200000, 300000, 400000, 500000, 750000),
                      label=c("50k","100k", "200k", "300k", "400k", "500k", "750k"))+

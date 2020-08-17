@@ -1,0 +1,1198 @@
+---
+title: "Exploratory Data Analysis (EDA) COVID-19"
+author: "Oscar Castro"
+output:
+  html_document: 
+    css: notebook.css
+    code_folding: hide
+    toc: yes
+    toc_float: true
+    toc_depth: 1
+---
+
+```{r Adjust the locale to English, message=FALSE, results='hide', echo=FALSE}
+curr_locale <- Sys.getlocale("LC_TIME")
+Sys.setlocale("LC_TIME","en_US.UTF-8")
+```
+
+---
+date: '`r format(Sys.Date(), "%A, %B %d of %Y")`'
+---
+
+```{r addmodalhtml, echo=FALSE}
+htmltools::includeHTML("modal.html")
+```
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::knit_hooks$set(wrap = function(before, options, envir){
+  if (before){
+    paste0('<', options$wrap, '>')
+  } else {
+    paste0('</', options$wrap, '>')
+  }
+})
+```
+
+# Description
+This is an exploratory data analysis for educational purposes. The analysis is carried out with data related to COVID-19 reported by various countries. The data is obtained from the Website: <https://ourworldindata.org/coronavirus-source-data>. The site's data set is constantly updated. **The results of the analysis changes according to the day the code is executed**.
+
+#### Data reading
+The data set is loaded directly from the Website to obtain information updated according to the execution day of the code.
+```{r Read data from website}
+covid.df <- read.csv("https://covid.ourworldindata.org/data/owid-covid-data.csv")
+```
+
+Required packages are loaded.
+```{r Load required packages, message=FALSE, results='hide'}
+library(ggplot2)
+library(knitr)
+library(reshape2)
+library(kableExtra)
+#library(dplyr)
+library(tidyverse)
+library(lubridate)
+library(gmodels)
+plotscaption <- "oscarcastrolopez.github.io"
+```
+
+#### Display of the dataframe structure with its variables and their type.
+```{r Show data frame structure}
+str(covid.df)
+```
+
+A detailed description of each variable of the data set can be found on the following Website:
+<https://github.com/owid/covid-19-data/blob/master/public/data/owid-covid-codebook.csv>.
+
+The variable date is class *factor* is converted to class *date*.
+```{r Convert column date from factor do date}
+covid.df$date <- as.Date(covid.df$date, format("%Y-%m-%d"))
+```
+#### List of countries of the data set.
+```{r print location levels}
+levels(covid.df$location)
+```
+
+#### List of continents of the data set.
+```{r print continent levels}
+levels(covid.df$continent)
+```
+
+#### Máximum number of days that the data set comprises.
+```{r Get number of days passed since first day report}
+maxdays <- max(table(covid.df$location))
+print(paste("Maximum reported days:",maxdays))
+```
+#### Countries reporting data of the maximum days of the data set.
+```{r Get countries that reportede the max number of days}
+names(table(covid.df$location)[table(covid.df$location)==maxdays])
+```
+#### Start and end dates of the data set.
+```{r Get the start and end dates of the dataset}
+
+  
+startdate <- min(covid.df$date)
+enddate <- max(covid.df$date)
+todayformatted <- format(Sys.Date(), "%A, %B %d, %Y")
+todayformatted <- paste(toupper(substr(todayformatted, 1, 1)), 
+                        substr(todayformatted, 2, nchar(todayformatted)), 
+                        sep="")
+print(paste("Starts:", format(startdate, "%A, %B, %d of %Y"), 
+            "Ends:",  format(enddate, "%A, %B, %d of %Y")))
+```
+
+# Rankings of countries with the variables of totals
+
+From the original dataframe, only the rows where *date* is equal to the maximum date (or compilation date) are obtained. Using this filter only the updated totals or accumulated values of each country are obtained. Additionally, **`r kableExtra::text_spec("countries with less than a million inhabitants are discarded", color = "red")`**. Some countries with small population have very high statistics per million of inhabitants. 
+
+The rankings are created with the following variables:
+
+```{r Generate a new dataset with the totals updated}
+# Get one row of each country with the updated totals
+covid.total.df <- covid.df[covid.df$date== enddate,]
+# Filter countries with less than 1 millón population
+covid.total.df <- covid.total.df[covid.total.df$population >= 1000000,]
+covid.total.df$location <- droplevels.factor(covid.total.df$location)
+print(names(covid.total.df)[c(5,7,9,11)])
+```
+
+After discarding the countries that have less than a million inhabitants, the data set now has: **`r length(levels(covid.total.df$location))` countries**.
+
+For each of the variables with total values, the 20 countries with the highest and lowest values are obtained. If México is not included in the top or bottom 20 it is added to the list indicating its ranking position. For each variable to be analyzed, the following is done in R:
+
+1. The data is ordered by the corresponding variable to be analyzed and stored in a new *dataframe*.
+2. In the new *dataframe* the information of the 20 countries with the highest values and the 20 countries with the lowest values are kept, the rest is discarded (row filtering).
+3. In the new *dataframe* only variables of interest are kept, the rest is discarded (column filtering). An additional column is created with the numeric ranking of each country.
+4. The data of the rankings is displayed as tables and bar graphs.
+
+## Ranking of countries by total cases of COVID-19 with column *total_cases* {.tabset .tabset-fade}
+
+```{r Get ranking of total_cases}
+# Data is ordered according to the total_cases column
+ranking.total_cases <- covid.total.df[order(-covid.total.df$total_cases),]
+# The row corresponding to World is removed
+ranking.total_cases <- ranking.total_cases[ranking.total_cases$location != "World", ]
+# A new column indicating the positionin the rank is added
+ranking.total_cases$position <- 1:nrow(ranking.total_cases)
+# Only columns of interest are kept
+columnfilter <- c("position", "location", "total_cases")
+bottom20.total_cases <- tail(ranking.total_cases[, columnfilter],20)
+top20.total_cases <- head(ranking.total_cases[, columnfilter],20)
+rm(ranking.total_cases)
+rownames(top20.total_cases) <- c()
+rownames(bottom20.total_cases) <- c()
+
+mexrow <- which(top20.total_cases$location=='Mexico')
+top20.total_cases$total_cases_formated <- formatC(top20.total_cases$total_cases, 
+                                                  format="f", big.mark=",", digits=0)
+bottom20.total_cases$total_cases_formated <- formatC(bottom20.total_cases$total_cases, 
+                                                     format="f", big.mark=",", digits=0)
+```
+
+### Tables
+
+```{r  Build html tables, results='hold'}
+tablecolnames <- c("Position", "Country", "Total cases")
+kable(top20.total_cases[,c(1,2,4)], format = "html", align = "clr", 
+      col.names=tablecolnames, caption="Countries with most cases") %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"), 
+                full_width = F, position = "float_left") %>%
+  row_spec(mexrow, bold = T, color = "black", background = "yellow")
+
+kable(bottom20.total_cases[,c(1,2,4)], format = "html", align = "clr", 
+      col.names=tablecolnames, caption="Countries with least cases") %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"), 
+                full_width = F, position = "right")
+```
+
+### Top 20 graph
+
+```{r Bar plot of total_cases, fig.height=8, fig.width=15, wrap = 'div', out.extra="class=img-zoomable"}
+ggplot(data=top20.total_cases, aes(x=reorder(paste(position, location),total_cases), 
+                                   y=total_cases, fill=location))+
+  geom_bar(stat = "identity", position=position_dodge(), colour="black", show.legend = FALSE)+
+  ylab("Total cases of COVID-19") +
+  geom_text(aes(y=max(total_cases)+170000, 
+                label=total_cases_formated,
+                fontface="bold"), 
+            color="black")+
+  labs(title="Top 20 countries with most cases of  COVID-19", 
+       subtitle = todayformatted,
+       caption = plotscaption)+
+  scale_y_continuous(breaks=c(100000, 500000, 750000, 1000000, 2000000, 3000000, 4000000, 5000000),
+                     label=c("100k", "500k", "750k", "1m", "2m", "3m", "4m", "5m"))+
+  coord_flip() +
+  xlab("Countries") +
+  theme_bw()+
+  theme(title = element_text(size=14, face="bold", colour = "black"),
+        axis.text.y = element_text(size=11, face="bold", colour = "black"),
+        axis.text.x = element_text(size=11, face="bold", colour = "black"))
+```
+
+## {.unlisted .unnumbered}
+
+### Ranking of countries by total cases of COVID-19 with column *total_cases* - **American countries** {.tabset .tabset-fade}
+
+This ranking is done with American countries only. The data is obtained by filtering the rows where the *continent* variable is either "North America" or "South America".
+
+```{r Get raking of total_cases filter location by American countries}
+ranking.total_cases.america <- covid.total.df[covid.total.df$continent %in% 
+                                                c("North America", "South America") ,]
+ranking.total_cases.america <- ranking.total_cases.america[order(-ranking.total_cases.america$total_cases),]
+ranking.total_cases.america$position <- 1:nrow(ranking.total_cases.america)
+bottom20.total_cases.america <- tail(ranking.total_cases.america[, c("position", "location", "total_cases")],5)
+top20.total_cases.america <- head(ranking.total_cases.america[, c("position", "location", "total_cases")],20)
+rownames(bottom20.total_cases.america) <- c()
+rownames(top20.total_cases.america) <- c()
+mexrow <- which(ranking.total_cases.america$location=='Mexico')
+rm(ranking.total_cases.america)
+top20.total_cases.america$total_cases_formated <- formatC(top20.total_cases.america$total_cases,
+                                                          format="f", big.mark=",", digits=0)
+bottom20.total_cases.america$total_cases_formated <- formatC(bottom20.total_cases.america$total_cases, 
+                                                             format="f", big.mark=",", digits=0)
+```
+
+
+#### Table
+
+```{r Build total_cases table, results='hold'}
+tablecolnames <- c("Position", "Country", "Total cases")
+kable(top20.total_cases.america[,c(1,2,4)], format = "html", align = "clr", 
+      col.names=tablecolnames, caption="Countries of the American Continent with most cases") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"), 
+                full_width = F, position = "center") %>%
+row_spec(mexrow, bold = T, color = "black", background = "yellow")
+```
+
+
+#### Top 20 graph
+
+```{r Bar plot of total_cases using American countries, fig.height=8, fig.width=15, , wrap = 'div', out.extra="class=img-zoomable"}
+ggplot(data=top20.total_cases.america, aes(x=reorder(paste(position, location),total_cases),
+                                           y=total_cases, fill=location))+
+  geom_bar(stat = "identity", position=position_dodge(), colour="black", show.legend = FALSE)+
+  ylab("Total cases of COVID-19") +
+  geom_text(aes(y=max(total_cases)+170000, 
+                label=format(total_cases, big.mark=","),
+                fontface="bold"), 
+            color="black")+
+  labs(title="Top 20 of American countries with most cases of COVID-19", 
+       subtitle = todayformatted,
+       caption = plotscaption)+
+  scale_y_continuous(breaks=c(100000, 250000, 500000, 750000, 1000000, 2000000, 3000000, 4000000, 5000000),
+                     label=c("100k", "250k", "500k", "750k", "1m", "2m", "3m", "4m", "5m"))+
+  coord_flip() +
+  xlab("Countries") +
+  theme_bw()+
+  theme(title = element_text(size=14, face="bold", colour = "black"),
+        axis.text.y = element_text(size=11, face="bold", colour = "black"),
+        axis.text.x = element_text(size=11, face="bold", colour = "black"))
+```
+
+## Ranking of countries by total cases of COVID-19 per million inhabitants with column *total_cases_per_million* {.tabset .tabset-fade}
+
+```{r Get ranking of total_cases_per_million}
+ranking.total_cases_per_million <- covid.total.df[order(-covid.total.df$total_cases_per_million),]
+ranking.total_cases_per_million$position <- 1:nrow(ranking.total_cases_per_million)
+columnfilter <- c("position", "location", "total_cases_per_million")
+mexico.total_cases_per_million <- ranking.total_cases_per_million[
+                                  ranking.total_cases_per_million$location == "Mexico", ]
+bottom20.total_cases_per_million <- tail(ranking.total_cases_per_million[, columnfilter],20)
+top20.total_cases_per_million <- head(ranking.total_cases_per_million[, columnfilter],20)
+mexico.total_cases_per_million <- mexico.total_cases_per_million[, columnfilter]
+rm(ranking.total_cases_per_million)
+rownames(top20.total_cases_per_million) <- c()
+rownames(bottom20.total_cases_per_million) <- c()
+rownames(mexico.total_cases_per_million) <- c()
+
+top20.total_cases_per_million <- rbind(top20.total_cases_per_million, mexico.total_cases_per_million)
+mexrow <- which(top20.total_cases_per_million$location=='Mexico')
+
+top20.total_cases_per_million$total_cases_per_million_formated <- formatC(
+  top20.total_cases_per_million$total_cases_per_million, format="f", big.mark=",", digits=2)
+bottom20.total_cases_per_million$total_cases_per_million_formated<- formatC(
+  bottom20.total_cases_per_million$total_cases_per_million, format="f", big.mark=",", digits=2)
+```
+
+
+### Tables
+
+<div class = "row">
+```{r Build total_cases_per_million tables, results='hold'}
+
+tablecolnames <- c("Position", "country", "Cases pmi")
+kable(top20.total_cases_per_million[,c(1,2,4)], format = "html", align = "clr", 
+      col.names=tablecolnames, caption="Countries with most cases per million inhabitants (pmi)") %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"), 
+                full_width = F, position = "float_left") %>%
+  row_spec(mexrow, bold = T, color = "black", background = "yellow")
+
+kable(bottom20.total_cases_per_million[,c(1,2,4)], format = "html", align = "clr", 
+      col.names=tablecolnames, caption="Countries with least cases per million inhabitants (pmi)") %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"), 
+                full_width = F, position = "right")
+```
+</div>
+
+### Top 20 graph
+
+```{r Bar plot of total_cases_per_million, fig.height=8, fig.width=15, wrap = 'div', out.extra="class=img-zoomable"}
+ggplot(data=top20.total_cases_per_million, 
+       aes(x=reorder(paste(position, location),total_cases_per_million), 
+           y=total_cases_per_million, fill=location))+
+  geom_bar(stat = "identity", position=position_dodge(), colour="black", show.legend = FALSE)+
+  ylab("Total cases of COVID-19 per million inhabitants") +
+  geom_text(aes(y=max(total_cases_per_million)+1250, 
+                label=total_cases_per_million_formated,
+                fontface="bold"), 
+            color="black")+
+  labs(title="Top 20 of countries with most cases of COVID-19 per million inhabitants (+ México)",
+       subtitle = todayformatted,
+       caption = plotscaption)+
+  coord_flip() +
+  xlab("Countries") +
+  theme_bw()+
+  theme(title = element_text(size=14, face="bold", colour = "black"),
+        axis.text.y = element_text(size=11, face="bold", colour = "black"),
+        axis.text.x = element_text(size=11, face="bold", colour = "black"))
+```
+
+## Ranking of countries by total deaths from COVID-19 with the variable *total_deaths* {.tabset .tabset-fade}
+
+```{r Get raking of total_deaths}
+ranking.total_deaths <- covid.total.df[order(-covid.total.df$total_deaths),]
+ranking.total_deaths <- ranking.total_deaths[ranking.total_deaths$location != "World", ]
+ranking.total_deaths$position <- 1:nrow(ranking.total_deaths)
+columnfilter <- c("position", "location", "total_deaths")
+bottom20.total_deaths <- tail(ranking.total_deaths[, columnfilter],20)
+top20.total_deaths <- head(ranking.total_deaths[, columnfilter],20)
+mexrow <- which(ranking.total_deaths$location=='Mexico')
+rm(ranking.total_deaths)
+rownames(top20.total_deaths) <- c()
+rownames(bottom20.total_deaths) <- c()
+
+top20.total_deaths$total_deaths_formated <- formatC(top20.total_deaths$total_deaths, 
+                                                  format="f", big.mark=",", digits=0)
+bottom20.total_deaths$total_deaths_formated <- formatC(bottom20.total_deaths$total_deaths, 
+                                                     format="f", big.mark=",", digits=0)
+```
+
+
+### Tables
+
+```{r Build total_deaths tables, results='hold'}
+tablecolnames <- c("Position", "Country", "Total deaths")
+kable(top20.total_deaths[,c(1,2,4)], format = "html", align = "clr", 
+      col.names=tablecolnames, caption="Countries with most deaths from COVID-19") %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"), 
+                full_width = F, position = "float_left") %>%
+  row_spec(mexrow, bold = T, color = "black", background = "yellow")
+
+kable(bottom20.total_deaths[,c(1,2,4)], format = "html", align = "clr", 
+      col.names=tablecolnames, caption="Countries with least deaths from COVID-19") %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"), 
+                full_width = F, position = "right")
+```
+
+### Top 20 graph
+
+```{r Bar plot of total_deaths, fig.height=8, fig.width=15, wrap = 'div', out.extra="class=img-zoomable"}
+ggplot(data=top20.total_deaths, 
+       aes(x=reorder(paste(position, location),total_deaths), 
+                                   y=total_deaths, fill=location))+
+  geom_bar(stat = "identity", position=position_dodge(), colour="black", show.legend = FALSE)+
+  ylab("Total deaths from COVID-19") +
+  geom_text(aes(y=max(total_deaths)+7500, 
+                label=total_deaths_formated,
+                fontface="bold"), 
+            color="black")+
+  labs(title="Top 20 of countries with total deaths from COVID-19",
+       subtitle = todayformatted,
+       caption = plotscaption)+
+  scale_y_continuous(breaks=c(10000, 25000, 50000, 75000, 100000, 150000, 170000), 
+                     label=c("10k", "25k", "50k", "75k", "100k", "150k", "170k"))+
+  coord_flip() +
+  xlab("Countries") +
+  theme_bw()+
+  theme(title = element_text(size=14, face="bold", colour = "black"),
+        axis.text.y = element_text(size=11, face="bold", colour = "black"),
+        axis.text.x = element_text(size=11, face="bold", colour = "black"))
+```
+
+## Ranking of countries by total deaths from COVID-19 per million inhabitants using the variable *total_deaths_per_million* {.tabset .tabset-fade}
+
+```{r Get raking of total_deaths_per_million}
+ranking.total_deaths_per_million <- covid.total.df[order(-covid.total.df$total_deaths_per_million),]
+ranking.total_deaths_per_million$position <- 1:nrow(ranking.total_deaths_per_million)
+columnfilter <- c("position", "location", "total_deaths_per_million")
+bottom20.total_deaths_per_million <- tail(ranking.total_deaths_per_million[, columnfilter],20)
+top20.total_deaths_per_million <- head(ranking.total_deaths_per_million[, columnfilter],20)
+mexrow <- which(ranking.total_deaths_per_million$location=='Mexico')
+rm(ranking.total_deaths_per_million)
+rownames(top20.total_deaths_per_million) <- c()
+rownames(bottom20.total_deaths_per_million) <- c()
+
+top20.total_deaths_per_million$total_deaths_per_million_formated <- formatC(
+  top20.total_deaths_per_million$total_deaths_per_million, format="f", big.mark=",", digits=2)
+bottom20.total_deaths_per_million$total_deaths_per_million_formated <- formatC(
+  bottom20.total_deaths_per_million$total_deaths_per_million, format="f", big.mark=",", digits=2)
+```
+
+
+### Table
+
+<div class = "row">
+```{r Build total_deaths_per_million table, results='hold'}
+tablecolnames <- c("Position", "Country", "Deaths pmi")
+
+kable(top20.total_deaths_per_million[,c(1,2,4)], format = "html", align = "clr", 
+      col.names=tablecolnames, 
+      caption="Countries with most deaths from COVID-19 per million inhabitants (pmi)") %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"), 
+                full_width = F, position = "float_left") %>%
+  row_spec(mexrow, bold = T, color = "black", background = "yellow")
+
+kable(bottom20.total_deaths_per_million[,c(1,2,4)], format = "html", align = "clr", 
+      col.names=tablecolnames, 
+      caption="Countries with least deaths from COVID-19 per million inhabitants (pmi)") %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"), 
+                full_width = F, position = "right")
+```
+</div>
+
+### Top 20 graph
+
+```{r Bar plot of total_deaths_per_million, fig.height=8, fig.width=15, wrap = 'div', out.extra="class=img-zoomable"}
+ggplot(data=top20.total_deaths_per_million, 
+       aes(x=reorder(paste(position, location),total_deaths_per_million), 
+           y=total_deaths_per_million, fill=location))+
+  geom_bar(stat = "identity", position=position_dodge(), colour="black", show.legend = FALSE)+
+  ylab("Deaths from COVID-19 per million inhabitants") +
+  geom_text(aes(y=max(total_deaths_per_million)+25, 
+                label=total_deaths_per_million_formated,
+                fontface="bold"),
+            color="black")+
+  labs(title="Top 20 countries by deaths from COVID-19 per million inhabitants",
+       subtitle = todayformatted,
+       caption = plotscaption)+
+  coord_flip() +
+  xlab("Countries") +
+  theme_bw()+
+  theme(title = element_text(size=14, face="bold", colour = "black"),
+        axis.text.y = element_text(size=11, face="bold", colour = "black"),
+        axis.text.x = element_text(size=11, face="bold", colour = "black"))
+```
+
+# Trends of COVID-19 cases and deaths with variables: *new_cases* and *new_deaths*
+
+## Daily cases reported of the five countries with most cases of COVID-19 {.tabset .tabset-fade}
+
+The following functions are created to facilitate building line graphs.
+```{r}
+##Line plot of new_cases with date breaks by month
+plot.trend.new_cases.month <- function(startdate, enddate, countries, graphtitle, graphsubtitle){
+  tmp.df <- covid.df[covid.df$location %in% countries,]
+  tmp.df <- tmp.df[tmp.df$date >= startdate,]
+  tmp.df <- tmp.df[tmp.df$date <= enddate,]
+  ggplot(data=tmp.df , aes(x=date, y=new_cases, group=location, colour=location)) +
+    geom_line(size=1) +
+    scale_color_discrete(name = "Countries")+
+    scale_x_date(date_breaks = "month", date_labels = "%B")+
+    ggtitle(graphtitle,
+            subtitle = graphsubtitle)+
+    labs(caption = plotscaption)+
+    ylab("New cases of COVID-19")+
+    xlab("Date")+
+    theme_bw()+
+    theme(title = element_text(size=14, face="bold", colour = "black"),
+          axis.text.y = element_text(size=11, face="bold", colour = "black"), 
+          axis.text.x = element_text(size=11, face="bold", colour = "black"),
+          legend.position = "bottom",
+          legend.title = element_text(size = 14),
+          legend.text = element_text(size = 13),
+          legend.key.width = unit(1.5,"cm"))+
+    guides(colour = guide_legend(override.aes = list(size=2)))
+}
+##Line plot of new_cases with date breaks by short month and days
+plot.trend.new_cases.monthday <- function(startdate, enddate, countries, graphtitle, graphsubtitle){
+  tmp.df <- covid.df[covid.df$location %in% countries,]
+  tmp.df <- tmp.df[tmp.df$date >= startdate,]
+  tmp.df <- tmp.df[tmp.df$date <= enddate,]
+  ggplot(data=tmp.df , aes(x=date, y=new_cases, group=location, colour=location)) +
+    geom_line(size=1) +
+    scale_color_discrete(name = "Countries")+
+    scale_x_date(date_breaks = "day", date_labels = "%b %d")+
+    ggtitle(graphtitle,
+            subtitle = graphsubtitle)+
+    labs(caption = plotscaption)+
+    ylab("New cases of COVID-19")+
+    xlab("Date")+
+    theme_bw()+
+    theme(title = element_text(size=14, face="bold", colour = "black"),
+          axis.text.y = element_text(size=11, face="bold", colour = "black"), 
+          axis.text.x = element_text(size=11, face="bold", colour = "black"),
+          legend.position = "bottom",
+          legend.title = element_text(size = 14),
+          legend.text = element_text(size = 13),
+          legend.key.width = unit(1.5,"cm"))+
+    guides(colour = guide_legend(override.aes = list(size=2)))
+}
+```
+
+Line graphs with date ranges. The starting date varies, whereas the end date is always `r todayformatted`.
+
+### All
+```{r Function to plot trends: new_cases, fig.height=8, fig.width=15, warning=FALSE, wrap = 'div', out.extra="class=img-zoomable"}
+top5.total_cases <- c(head(as.character(top20.total_cases$location),5), "Mexico")
+sublabel.tmp <- paste("Range:", format(startdate, "%m/%d/%Y"),"-", format(enddate, "%m/%d/%Y"))
+plot.trend.new_cases.month(startdate, enddate, top5.total_cases, "Trends of new cases of COVID-19", sublabel.tmp)
+```
+
+### -5 Months
+```{r fig.height=8, fig.width=15, warning=FALSE, wrap = 'div', out.extra="class=img-zoomable"}
+mes.tmp <- as.numeric(format(enddate, "%m"))-5
+mes.tmp <- ifelse(mes.tmp < 10, paste0("0",mes.tmp), mes.tmp)
+startdate.tmp <- paste0("2020-", mes.tmp, "-01")
+startdate.tmp <- as.Date(startdate.tmp)
+sublabel.tmp <- paste("Date range:", format(startdate.tmp, "%m/%d/%Y"),"-", format(enddate, "%m/%d/%Y"))
+plot.trend.new_cases.month(startdate.tmp, enddate, top5.total_cases, "Trends of new cases of COVID-19", sublabel.tmp)
+```
+
+### -3 Months
+```{r fig.height=8, fig.width=15, warning=FALSE, wrap = 'div', out.extra="class=img-zoomable"}
+mes.tmp <- as.numeric(format(enddate, "%m"))-3
+mes.tmp <- ifelse(mes.tmp < 10, paste0("0",mes.tmp), mes.tmp)
+startdate.tmp <- paste0("2020-", mes.tmp, "-01")
+startdate.tmp <- as.Date(startdate.tmp)
+sublabel.tmp <- paste("Date range:", format(startdate.tmp, "%m/%d/%Y"),"-", format(enddate, "%m/%d/%Y"))
+plot.trend.new_cases.month(startdate.tmp, enddate, top5.total_cases, "Trends of new cases of COVID-19", sublabel.tmp)
+```
+
+### -2 Months
+```{r fig.height=8, fig.width=15, warning=FALSE, wrap = 'div', out.extra="class=img-zoomable"}
+mes.tmp <- as.numeric(format(enddate, "%m"))-2
+mes.tmp <- ifelse(mes.tmp < 10, paste0("0",mes.tmp), mes.tmp)
+startdate.tmp <- paste0("2020-", mes.tmp, "-01")
+startdate.tmp <- as.Date(startdate.tmp)
+sublabel.tmp <- paste("Date range:", format(startdate.tmp, "%m/%d/%Y"),"-", format(enddate, "%m/%d/%Y"))
+plot.trend.new_cases.month(startdate.tmp, enddate, top5.total_cases, "Trends of new cases of COVID-19", sublabel.tmp)
+```
+
+### -1 Month
+```{r fig.height=8, fig.width=15, warning=FALSE, wrap = 'div', out.extra="class=img-zoomable"}
+mes.tmp <- as.numeric(format(enddate, "%m"))-1
+mes.tmp <- ifelse(mes.tmp < 10, paste0("0",mes.tmp), mes.tmp)
+startdate.tmp <- paste0("2020-", mes.tmp, "-01")
+startdate.tmp <- as.Date(startdate.tmp)
+sublabel.tmp <- paste("Date range:", format(startdate.tmp, "%m/%d/%Y"),"-", format(enddate, "%m/%d/%Y"))
+plot.trend.new_cases.month(startdate.tmp, enddate, top5.total_cases, "Trends of new cases of COVID-19", sublabel.tmp)
+```
+
+### -3 Weeks
+```{r fig.height=8, fig.width=15, warning=FALSE, wrap = 'div', out.extra="class=img-zoomable"}
+sublabel.tmp <- paste("Date range:", format(enddate-21, "%d/%m/%Y"),"-", format(enddate, "%d/%m/%Y"))
+plot.trend.new_cases.monthday(enddate-21, enddate, top5.total_cases, "Trends of new cases of COVID-19", sublabel.tmp)
+```
+
+### -2 Weeks
+```{r fig.height=8, fig.width=15, warning=FALSE, wrap = 'div', out.extra="class=img-zoomable"}
+sublabel.tmp <- paste("Date range:", format(enddate-14, "%d/%m/%Y"),"-", format(enddate, "%d/%m/%Y"))
+plot.trend.new_cases.monthday(enddate-14, enddate, top5.total_cases, "Trends of new cases of COVID-19", sublabel.tmp)
+```
+
+## Daily deaths of the five countries with most COVID-19 cases {.tabset .tabset-fade}
+
+Functions to build the line graphs.
+```{r}
+##Line plot of new_deaths with date breaks by month
+plot.trend.new_deaths.month <- function(startdate, enddate, countries, graphtitle, graphsubtitle){
+  tmp.df <- covid.df[covid.df$location %in% countries,]
+  tmp.df <- tmp.df[tmp.df$date >= startdate,]
+  tmp.df <- tmp.df[tmp.df$date <= enddate,]
+  ggplot(data=tmp.df , aes(x=date, y=new_deaths, group=location, colour=location)) +
+    geom_line(size=1) +
+    scale_color_discrete(name = "Countries")+
+    scale_x_date(date_breaks = "month", date_labels = "%B")+
+    ggtitle(graphtitle,
+            subtitle = graphsubtitle)+
+    labs(caption = plotscaption)+
+    ylab("Daily deaths from COVID-19")+
+    xlab("Date")+
+    theme_bw()+
+    theme(title = element_text(size=14, face="bold", colour = "black"),
+          axis.text.y = element_text(size=11, face="bold", colour = "black"), 
+          axis.text.x = element_text(size=11, face="bold", colour = "black"),
+          legend.position = "bottom",
+          legend.title = element_text(size = 14),
+          legend.text = element_text(size = 13),
+          legend.key.width = unit(1.5,"cm"))+
+    guides(colour = guide_legend(override.aes = list(size=2)))
+}
+##Line plot of new_deaths with date breaks by short month and day
+plot.trend.new_deaths.monthdays <- function(startdate, enddate, countries, graphtitle, graphsubtitle){
+  tmp.df <- covid.df[covid.df$location %in% countries,]
+  tmp.df <- tmp.df[tmp.df$date >= startdate,]
+  tmp.df <- tmp.df[tmp.df$date <= enddate,]
+  ggplot(data=tmp.df , aes(x=date, y=new_deaths, group=location, colour=location)) +
+    geom_line(size=1) +
+    scale_color_discrete(name = "Countries")+
+    scale_x_date(date_breaks = "day", date_labels = "%b %d")+
+    ggtitle(graphtitle,
+            subtitle = graphsubtitle)+
+    labs(caption = plotscaption)+
+    ylab("Daily deaths from COVID-19")+
+    xlab("Date")+
+    theme_bw()+
+    theme(title = element_text(size=14, face="bold", colour = "black"),
+        axis.text.y = element_text(size=11, face="bold", colour = "black"),
+        axis.text.x = element_text(size=11, face="bold", colour = "black"),
+        legend.position = "bottom",
+        legend.title = element_text(size = 14),
+        legend.text = element_text(size = 13),
+        legend.key.width = unit(1.5,"cm"))+
+        guides(colour = guide_legend(override.aes = list(size=2)))
+}
+```
+
+Line graphs with date ranges. The starting date varies, whereas the end date is always `r todayformatted`.
+
+### All
+```{r fig.height=8, fig.width=15, warning=FALSE, wrap = 'div', out.extra="class=img-zoomable"}
+top5.total_cases <- c(head(as.character(top20.total_cases$location),5), "Mexico")
+sublabel.tmp <- paste("Date range:", format(startdate, "%m/%d/%Y"),"-", format(enddate, "%m/%d/%Y"))
+title.tmp <- "Trends of daily deaths from COVID-19"
+plot.trend.new_deaths.month(startdate, enddate, top5.total_cases, title.tmp, sublabel.tmp)
+```
+
+### -5 Months
+```{r fig.height=8, fig.width=15, warning=FALSE, wrap = 'div', out.extra="class=img-zoomable"}
+mes.tmp <- as.numeric(format(enddate, "%m"))-5
+mes.tmp <- ifelse(mes.tmp < 10, paste0("0",mes.tmp), mes.tmp)
+startdate.tmp <- paste0("2020-", mes.tmp, "-01")
+startdate.tmp <- as.Date(startdate.tmp)
+sublabel.tmp <- paste("Date range:", format(startdate.tmp, "%m/%d/%Y"),"-", format(enddate, "%m/%d/%Y"))
+plot.trend.new_deaths.month(startdate.tmp, enddate, top5.total_cases, title.tmp, sublabel.tmp)
+```
+
+### -3 Months
+```{r fig.height=8, fig.width=15, warning=FALSE, wrap = 'div', out.extra="class=img-zoomable"}
+mes.tmp <- as.numeric(format(enddate, "%m"))-3
+mes.tmp <- ifelse(mes.tmp < 10, paste0("0",mes.tmp), mes.tmp)
+startdate.tmp <- paste0("2020-", mes.tmp, "-01")
+startdate.tmp <- as.Date(startdate.tmp)
+sublabel.tmp <- paste("Date range:", format(startdate.tmp, "%m/%d/%Y"),"-", format(enddate, "%m/%d/%Y"))
+plot.trend.new_deaths.month(startdate.tmp, enddate, top5.total_cases, title.tmp, sublabel.tmp)
+```
+
+### -2 Months
+```{r fig.height=8, fig.width=15, warning=FALSE, wrap = 'div', out.extra="class=img-zoomable"}
+mes.tmp <- as.numeric(format(enddate, "%m"))-2
+mes.tmp <- ifelse(mes.tmp < 10, paste0("0",mes.tmp), mes.tmp)
+startdate.tmp <- paste0("2020-", mes.tmp, "-01")
+startdate.tmp <- as.Date(startdate.tmp)
+sublabel.tmp <- paste("Date range:", format(startdate.tmp, "%m/%d/%Y"),"-", format(enddate, "%m/%d/%Y"))
+plot.trend.new_deaths.month(startdate.tmp, enddate, top5.total_cases, title.tmp, sublabel.tmp)
+```
+
+### -1 Month
+```{r fig.height=8, fig.width=15, warning=FALSE, wrap = 'div', out.extra="class=img-zoomable"}
+mes.tmp <- as.numeric(format(enddate, "%m"))-1
+mes.tmp <- ifelse(mes.tmp < 10, paste0("0",mes.tmp), mes.tmp)
+startdate.tmp <- paste0("2020-", mes.tmp, "-01")
+startdate.tmp <- as.Date(startdate.tmp)
+sublabel.tmp <- paste("Date range:", format(startdate.tmp, "%m/%d/%Y"),"-", format(enddate, "%m/%d/%Y"))
+plot.trend.new_deaths.month(startdate.tmp, enddate, top5.total_cases, title.tmp, sublabel.tmp)
+```
+
+### -3 Weeks
+```{r fig.height=8, fig.width=15, warning=FALSE, wrap = 'div', out.extra="class=img-zoomable"}
+sublabel.tmp <- paste("Date range:", format(enddate-21, "%d/%m/%Y"),"-", format(enddate, "%d/%m/%Y"))
+plot.trend.new_deaths.monthdays(enddate-21, enddate, top5.total_cases, title.tmp, sublabel.tmp)
+```
+
+### -2 Weeks
+```{r fig.height=8, fig.width=15, warning=FALSE, wrap = 'div', out.extra="class=img-zoomable"}
+sublabel.tmp <- paste("Date range:", format(enddate-14, "%d/%m/%Y"),"-", format(enddate, "%d/%m/%Y"))
+plot.trend.new_deaths.monthdays(enddate-14, enddate, top5.total_cases, title.tmp, sublabel.tmp)
+```
+
+# Cumulative COVID-19 Cases and Deaths
+
+For the following graphs, the variables *total_cases* and *total_deaths* are used.
+
+## Curves of total cases of the five countries with most cases (+ México) {.tabset .tabset-fade}
+
+Line graphs with date ranges. The starting date varies, whereas the end date is always `r todayformatted`.
+
+Functions to build the line graphs.
+
+```{r Functions to build line plots with total_cases and total_deaths}
+##Line plot of new_total_cases with date breaks by month
+plot.trend.total_cases.month <- function(startdate, enddate, countries, graphtitle, graphsubtitle){
+  tmp.df <- covid.df[covid.df$location %in% countries,]
+  tmp.df <- tmp.df[tmp.df$date >= startdate,]
+  tmp.df <- tmp.df[tmp.df$date <= enddate,]
+  ggplot(data=tmp.df , aes(x=date, y=total_cases, group=location, colour=location)) +
+    geom_line(size=1) +
+    scale_color_discrete(name = "Countries")+
+    scale_x_date(date_breaks = "month", date_labels = "%B")+
+    ggtitle(graphtitle,
+            subtitle = graphsubtitle)+
+    labs(caption = plotscaption)+
+    ylab("Cumulative cases of COVID-19")+
+    xlab("Date")+
+    theme_bw()+
+    theme(title = element_text(size=14, face="bold", colour = "black"),
+        axis.text.y = element_text(size=11, face="bold", colour = "black"),
+        axis.text.x = element_text(size=11, face="bold", colour = "black"),
+        legend.position = "bottom",
+        legend.title = element_text(size = 14),
+        legend.text = element_text(size = 13),
+        legend.key.width = unit(1.5,"cm"))+
+        guides(colour = guide_legend(override.aes = list(size=2)))
+}
+##Line plot of new_deaths with date breaks by short month and day
+plot.trend.total_cases.monthdays <- function(startdate, enddate, countries, graphtitle, graphsubtitle){
+  tmp.df <- covid.df[covid.df$location %in% countries,]
+  tmp.df <- tmp.df[tmp.df$date >= startdate,]
+  tmp.df <- tmp.df[tmp.df$date <= enddate,]
+  ggplot(data=tmp.df , aes(x=date, y=total_cases, group=location, colour=location)) +
+    geom_line(size=1) +
+    scale_color_discrete(name = "Países")+
+    scale_x_date(date_breaks = "day", date_labels = "%b %d")+
+    ggtitle(graphtitle,
+            subtitle = graphsubtitle)+
+    labs(caption = plotscaption)+
+    ylab("Cumulative cases of COVID-19")+
+    xlab("Date")+
+    theme_bw()+
+    theme(title = element_text(size=14, face="bold", colour = "black"),
+        axis.text.y = element_text(size=11, face="bold", colour = "black"),
+        axis.text.x = element_text(size=11, face="bold", colour = "black"),
+        legend.position = "bottom",
+        legend.title = element_text(size = 14),
+        legend.text = element_text(size = 13),
+        legend.key.width = unit(1.5,"cm"))+
+        guides(colour = guide_legend(override.aes = list(size=2)))
+}
+
+```
+
+### All
+```{r fig.height=8, fig.width=15, warning=FALSE, wrap = 'div', out.extra="class=img-zoomable"}
+sublabel.tmp <- paste("Date range:", format(startdate, "%m/%d/%Y"),"-", format(enddate, "%m/%d/%Y"))
+title.tmp <- "Cumulative cases of COVID-19"
+plot.trend.total_cases.month(startdate, enddate, top5.total_cases, title.tmp, sublabel.tmp)
+```
+
+### -5 Months
+```{r fig.height=8, fig.width=15, warning=FALSE, wrap = 'div', out.extra="class=img-zoomable"}
+mes.tmp <- as.numeric(format(enddate, "%m"))-5
+mes.tmp <- ifelse(mes.tmp < 10, paste0("0",mes.tmp), mes.tmp)
+startdate.tmp <- paste0("2020-", mes.tmp, "-01")
+startdate.tmp <- as.Date(startdate.tmp)
+sublabel.tmp <- paste("Date range:", format(startdate.tmp, "%m/%d/%Y"),"-", format(enddate, "%m/%d/%Y"))
+plot.trend.total_cases.month(startdate.tmp, enddate, top5.total_cases, title.tmp, sublabel.tmp)
+```
+
+### -3 Months
+```{r fig.height=8, fig.width=15, warning=FALSE, wrap = 'div', out.extra="class=img-zoomable"}
+mes.tmp <- as.numeric(format(enddate, "%m"))-3
+mes.tmp <- ifelse(mes.tmp < 10, paste0("0",mes.tmp), mes.tmp)
+startdate.tmp <- paste0("2020-", mes.tmp, "-01")
+startdate.tmp <- as.Date(startdate.tmp)
+sublabel.tmp <- paste("Date range:", format(startdate.tmp, "%m/%d/%Y"),"-", format(enddate, "%m/%d/%Y"))
+plot.trend.total_cases.month(startdate.tmp, enddate, top5.total_cases, title.tmp, sublabel.tmp)
+```
+
+### -2 Months
+```{r fig.height=8, fig.width=15, warning=FALSE, wrap = 'div', out.extra="class=img-zoomable"}
+mes.tmp <- as.numeric(format(enddate, "%m"))-2
+mes.tmp <- ifelse(mes.tmp < 10, paste0("0",mes.tmp), mes.tmp)
+startdate.tmp <- paste0("2020-", mes.tmp, "-01")
+startdate.tmp <- as.Date(startdate.tmp)
+sublabel.tmp <- paste("Date range:", format(startdate.tmp, "%m/%d/%Y"),"-", format(enddate, "%m/%d/%Y"))
+plot.trend.total_cases.month(startdate.tmp, enddate, top5.total_cases, title.tmp, sublabel.tmp)
+```
+
+### -1 Month
+```{r fig.height=8, fig.width=15, warning=FALSE, wrap = 'div', out.extra="class=img-zoomable"}
+mes.tmp <- as.numeric(format(enddate, "%m"))-1
+mes.tmp <- ifelse(mes.tmp < 10, paste0("0",mes.tmp), mes.tmp)
+startdate.tmp <- paste0("2020-", mes.tmp, "-01")
+startdate.tmp <- as.Date(startdate.tmp)
+sublabel.tmp <- paste("Date range:", format(startdate.tmp, "%m/%d/%Y"),"-", format(enddate, "%m/%d/%Y"))
+plot.trend.total_cases.month(startdate.tmp, enddate, top5.total_cases, title.tmp, sublabel.tmp)
+```
+
+### -1 Month TOP[3:7]
+
+The amount of cases of United States and Brazil do not allow to appreciate in detail the curves of the rest of the countries. Those two countries are removed from the graph, the countries in positions 6 and 7 of the top 20 of countries with most cases are added.
+
+```{r fig.height=8, fig.width=15, warning=FALSE, wrap = 'div', out.extra="class=img-zoomable"}
+mes.tmp <- as.numeric(format(enddate, "%m"))-1
+mes.tmp <- ifelse(mes.tmp < 10, paste0("0",mes.tmp), mes.tmp)
+startdate.tmp <- paste0("2020-", mes.tmp, "-01")
+startdate.tmp <- as.Date(startdate.tmp)
+sublabel.tmp <- paste("Date range:", format(startdate.tmp, "%m/%d/%Y"),"-", format(enddate, "%m/%d/%Y"))
+total_cases.others <- as.character(top20.total_cases$location)[3:7]
+plot.trend.total_cases.month(startdate.tmp, enddate, total_cases.others, title.tmp, sublabel.tmp)
+```
+
+### -3 Weeks TOP[3:7]
+
+```{r fig.height=8, fig.width=15, warning=FALSE, wrap = 'div', out.extra="class=img-zoomable"}
+sublabel.tmp <- paste("Date range:", format(enddate-21, "%d/%m/%Y"),"-", format(enddate, "%d/%m/%Y"))
+plot.trend.total_cases.monthdays(enddate-21, enddate, total_cases.others, title.tmp, sublabel.tmp)
+```
+
+### -2 Weeks TOP[3:7]
+
+```{r fig.height=8, fig.width=15, warning=FALSE, wrap = 'div', out.extra="class=img-zoomable"}
+sublabel.tmp <- paste("Date range:", format(enddate-14, "%d/%m/%Y"),"-", format(enddate, "%d/%m/%Y"))
+plot.trend.total_cases.monthdays(enddate-14, enddate, total_cases.others, title.tmp, sublabel.tmp)
+```
+
+### -2 Weeks MX, PE y SA
+
+```{r fig.height=8, fig.width=15, warning=FALSE, wrap = 'div', out.extra="class=img-zoomable"}
+total_cases.others <- as.character(top20.total_cases$location)[3:7]
+total_cases.others <- total_cases.others[c(-1,-2)]
+countrieslabels <- paste(total_cases.others, collapse = ', ')
+sublabel.tmp <- paste("Date range:", format(enddate-14, "%d/%m/%Y"),"-", format(enddate, "%d/%m/%Y"))
+title.tmp <- paste(title.tmp, "of", countrieslabels)
+plot.trend.total_cases.monthdays(enddate-14, enddate, total_cases.others, title.tmp, sublabel.tmp)
+```
+
+## Curves of daily deaths of the five countries with most deaths from COVID-19 (+ México) {.tabset .tabset-fade}
+
+Line graphs with date ranges. The starting date varies, whereas the end date is always `r todayformatted`.
+
+Functions to build the line graphs.
+
+```{r}
+# Generate total_deaths line plot with month breaks
+plot.trend.total_deaths.month <- function(startdate, enddate, countries, graphtitle, subgraphtitle){
+  tmp.df <- covid.df[covid.df$location %in% countries,]
+  tmp.df <- tmp.df[tmp.df$date >= startdate,]
+  tmp.df <- tmp.df[tmp.df$date <= enddate,]
+  ggplot(data=tmp.df , aes(x=date, y=total_deaths, group=location, colour=location)) +
+    geom_line(size=1) +
+    scale_color_discrete(name = "Countries")+
+    scale_x_date(date_breaks = "month", date_labels = "%B")+
+    ggtitle(graphtitle,
+            subtitle = subgraphtitle)+
+    labs(caption = plotscaption)+
+    ylab("Cumulative deaths from COVID-19")+
+    xlab("Date")+
+    theme_bw()+
+    theme(title = element_text(size=14, face="bold", colour = "black"),
+        axis.text.y = element_text(size=11, face="bold", colour = "black"),
+        axis.text.x = element_text(size=11, face="bold", colour = "black"),
+        legend.position = "bottom",
+        legend.title = element_text(size = 14),
+        legend.text = element_text(size = 13),
+        legend.key.width = unit(1.5,"cm"))+
+        guides(colour = guide_legend(override.aes = list(size=2)))
+}
+# Generate total_deaths line plot with month and day breaks
+plot.trend.total_deaths.monthdays <- function(startdate, enddate, countries, graphtitle, subgraphtitle){
+  tmp.df <- covid.df[covid.df$location %in% countries,]
+  tmp.df <- tmp.df[tmp.df$date >= startdate,]
+  tmp.df <- tmp.df[tmp.df$date <= enddate,]
+  ggplot(data=tmp.df , aes(x=date, y=total_deaths, group=location, colour=location)) +
+    geom_line(size=1) +
+    scale_color_discrete(name = "Countries")+
+    scale_x_date(date_breaks = "day", date_labels = "%b %d")+
+    ggtitle(graphtitle,
+            subtitle = subgraphtitle)+
+    labs(caption = plotscaption)+
+    ylab("Cumulative deaths from COVID-19")+
+    xlab("Date")+
+    theme_bw()+
+    theme(title = element_text(size=14, face="bold", colour = "black"),
+        axis.text.y = element_text(size=11, face="bold", colour = "black"),
+        axis.text.x = element_text(size=11, face="bold", colour = "black"),
+        legend.position = "bottom",
+        legend.title = element_text(size = 14),
+        legend.text = element_text(size = 13),
+        legend.key.width = unit(1.5,"cm"))+
+        guides(colour = guide_legend(override.aes = list(size=2)))
+}
+```
+
+### All
+```{r fig.height=8, fig.width=15, warning=FALSE, wrap = 'div', out.extra="class=img-zoomable"}
+top5.total_deaths <-  head(as.character(top20.total_deaths$location),5)
+sublabel.tmp <- paste("Date range:", format(startdate, "%m/%d/%Y"),"-", format(enddate, "%m/%d/%Y"))
+title.tmp <- "Cumulative deaths from COVID-19"
+plot.trend.total_deaths.month(startdate, enddate, top5.total_deaths, title.tmp, sublabel.tmp)
+```
+
+### -5 Months
+```{r fig.height=8, fig.width=15, warning=FALSE, wrap = 'div', out.extra="class=img-zoomable"}
+mes.tmp <- as.numeric(format(enddate, "%m"))-5
+mes.tmp <- ifelse(mes.tmp < 10, paste0("0",mes.tmp), mes.tmp)
+startdate.tmp <- paste0("2020-", mes.tmp, "-01")
+startdate.tmp <- as.Date(startdate.tmp)
+sublabel.tmp <- paste("Date range:", format(startdate.tmp, "%m/%d/%Y"),"-", format(enddate, "%m/%d/%Y"))
+plot.trend.total_deaths.month(startdate.tmp, enddate, top5.total_deaths, title.tmp, sublabel.tmp)
+```
+
+### -3 Months
+```{r fig.height=8, fig.width=15, warning=FALSE, wrap = 'div', out.extra="class=img-zoomable"}
+mes.tmp <- as.numeric(format(enddate, "%m"))-3
+mes.tmp <- ifelse(mes.tmp < 10, paste0("0",mes.tmp), mes.tmp)
+startdate.tmp <- paste0("2020-", mes.tmp, "-01")
+startdate.tmp <- as.Date(startdate.tmp)
+sublabel.tmp <- paste("Date range:", format(startdate.tmp, "%m/%d/%Y"),"-", format(enddate, "%m/%d/%Y"))
+plot.trend.total_deaths.month(startdate.tmp, enddate, top5.total_deaths, title.tmp, sublabel.tmp)
+```
+
+### -2 Months
+```{r fig.height=8, fig.width=15, warning=FALSE, wrap = 'div', out.extra="class=img-zoomable"}
+mes.tmp <- as.numeric(format(enddate, "%m"))-2
+mes.tmp <- ifelse(mes.tmp < 10, paste0("0",mes.tmp), mes.tmp)
+startdate.tmp <- paste0("2020-", mes.tmp, "-01")
+startdate.tmp <- as.Date(startdate.tmp)
+sublabel.tmp <- paste("Date range:", format(startdate.tmp, "%m/%d/%Y"),"-", format(enddate, "%m/%d/%Y"))
+plot.trend.total_deaths.month(startdate.tmp, enddate, top5.total_deaths, title.tmp, sublabel.tmp)
+```
+
+### -1 Months
+```{r fig.height=8, fig.width=15, warning=FALSE, wrap = 'div', out.extra="class=img-zoomable"}
+mes.tmp <- as.numeric(format(enddate, "%m"))-1
+mes.tmp <- ifelse(mes.tmp < 10, paste0("0",mes.tmp), mes.tmp)
+startdate.tmp <- paste0("2020-", mes.tmp, "-01")
+startdate.tmp <- as.Date(startdate.tmp)
+sublabel.tmp <- paste("Date range:", format(startdate.tmp, "%m/%d/%Y"),"-", format(enddate, "%m/%d/%Y"))
+plot.trend.total_deaths.month(startdate.tmp, enddate, top5.total_deaths, title.tmp, sublabel.tmp)
+```
+
+### -1 Month TOP[3:7]
+
+The amount of deaths of United States and Brazil do not allow to appreciate in detail the curves of the rest of the countries. Those two countries are removed from the graph, the countries in positions 6 and 7 of the top 20 of countries with the most total deaths are added.
+
+```{r fig.height=8, fig.width=15, warning=FALSE, wrap = 'div', out.extra="class=img-zoomable"}
+mes.tmp <- as.numeric(format(enddate, "%m"))-1
+mes.tmp <- ifelse(mes.tmp < 10, paste0("0",mes.tmp), mes.tmp)
+startdate.tmp <- paste0("2020-", mes.tmp, "-01")
+startdate.tmp <- as.Date(startdate.tmp)
+sublabel.tmp <- paste("Date range:", format(startdate.tmp, "%m/%d/%Y"),"-", format(enddate, "%m/%d/%Y"))
+total_deaths.others <- as.character(top20.total_deaths$location)[3:7]
+plot.trend.total_deaths.month(startdate.tmp, enddate, total_deaths.others, title.tmp, sublabel.tmp)
+```
+
+### -3 Weeks TOP[3:7]
+
+```{r fig.height=8, fig.width=15, warning=FALSE, wrap = 'div', out.extra="class=img-zoomable"}
+sublabel.tmp <- paste("Date range:", format(enddate-21, "%d/%m/%Y"),"-", format(enddate, "%d/%m/%Y"))
+plot.trend.total_deaths.monthdays(enddate-21, enddate, total_deaths.others, title.tmp, sublabel.tmp)
+```
+
+### -3 Weeks IN, IR, MX, PE, RU
+The acumulative curves of France, Italy, and the United Kindgdom are almost flat, the number of deaths from COVID-19 has stagnated. One possible reason is that the pandemic started first in Europe and the number of recently reported deaths is zero or very low. The curves for Mexico and India continues to rise. The countries of France, Italy, and the United Kingdom are discarded from the data. Other countries are added where it seems that the number of deaths from COVID-19 is still increasing. The graph is generated with the accumulated death curves of the last 3 weeks of India, Iran, Mexico, Peru and Russia:
+
+```{r fig.height=8, fig.width=15, warning=FALSE, wrap = 'div', out.extra="class=img-zoomable"}
+total_deaths.others <- as.character(top20.total_deaths$location)[c(3,5,8,9,10)]
+countrieslabels <- paste(total_deaths.others, collapse = ', ')
+title.tmp <- paste(title.tmp, "de", countrieslabels)
+sublabel.tmp <- paste("Date range:", format(enddate-21, "%d/%m/%Y"),"-", format(enddate, "%d/%m/%Y"))
+plot.trend.total_deaths.monthdays(enddate-21, enddate, total_deaths.others, title.tmp, sublabel.tmp)
+```
+
+### -2 Weeks IN, IR, MX, PE, RU
+```{r fig.height=8, fig.width=15, warning=FALSE, wrap = 'div', out.extra="class=img-zoomable"}
+total_deaths.others <- as.character(top20.total_deaths$location)[c(3,5,8,9,10)]
+countrieslabels <- paste(total_deaths.others, collapse = ', ')
+title.tmp <- paste(title.tmp, "de", countrieslabels)
+sublabel.tmp <- paste("Date range:", format(enddate-14, "%d/%m/%Y"),"-", format(enddate, "%d/%m/%Y"))
+plot.trend.total_deaths.monthdays(enddate-14, enddate, total_deaths.others, title.tmp, sublabel.tmp)
+```
+
+# Comparison of COVID-19 cases and deaths curves in Mexico {.tabset .tabset-fade}
+
+## Daily cases and deaths
+
+```{r fig.height=8, fig.width=15, warning=FALSE, wrap = 'div', out.extra="class=img-zoomable"}
+covid.mexico <- covid.df[covid.df$location=='Mexico',]
+covid.mexico <- covid.mexico[covid.mexico$date > "2020-04-01",]
+covid.mexico.new <- covid.mexico[,c("date", "new_cases", "new_deaths")]
+covid.mexico.new.lf <-melt(covid.mexico.new, id.vars = c("date"))
+ggplot(data=covid.mexico.new.lf , aes(x=date, y=value, group=variable, colour=variable)) +
+    geom_line(size=1) +
+    scale_color_discrete(name = "Indicator", labels=c("Cases", "Deaths"))+
+    scale_x_date(date_breaks = "week", date_labels = "%b %d")+
+    ggtitle("COVID-19 Daily cases and deaths in México")+
+    labs(caption = plotscaption)+
+    ylab("")+
+    xlab("Date")+
+    theme_bw()+
+    theme(title = element_text(size=14, face="bold", colour = "black"),
+          axis.text.y = element_text(size=11, face="bold", colour = "black"), 
+          axis.text.x = element_text(size=11, face="bold", colour = "black"),
+          legend.position = "bottom",
+          legend.title = element_text(size = 14),
+          legend.text = element_text(size = 13),
+          legend.key.width = unit(1.5,"cm"))+
+    guides(colour = guide_legend(override.aes = list(size=2)))
+```
+
+## Daily cases and deaths last month
+
+```{r fig.height=8, fig.width=15, warning=FALSE, wrap = 'div', out.extra="class=img-zoomable"}
+covid.mexico.new.lastmonth <- covid.mexico.new[covid.mexico.new$date >= enddate-30, ]
+covid.mexico.new.lastmonth.lf <- melt(covid.mexico.new.lastmonth, id.vars = c("date"))
+ggplot(data=covid.mexico.new.lastmonth.lf , aes(x=date, y=value, group=variable, colour=variable)) +
+    geom_line(size=1) +
+    scale_color_discrete(name = "Indicator", labels=c("Cases", "Deaths"))+
+    scale_x_date(date_breaks = "week", date_labels = "%b %d")+
+    ggtitle("COVID-19 Daily cases and deaths in México - Last month")+
+    labs(caption = plotscaption)+
+    ylab("")+
+    xlab("Date")+
+    theme_bw()+
+    theme(title = element_text(size=14, face="bold", colour = "black"),
+          axis.text.y = element_text(size=11, face="bold", colour = "black"), 
+          axis.text.x = element_text(size=11, face="bold", colour = "black"),
+          legend.position = "bottom",
+          legend.title = element_text(size = 14),
+          legend.text = element_text(size = 13),
+          legend.key.width = unit(1.5,"cm"))+
+    guides(colour = guide_legend(override.aes = list(size=2)))
+```
+
+## Total cases and deaths
+
+```{r fig.height=8, fig.width=15, warning=FALSE, wrap = 'div', out.extra="class=img-zoomable"}
+covid.mexico.total <- covid.mexico[,c("date", "total_cases", "total_deaths")]
+covid.mexico.total.lf <-melt(covid.mexico.total, id.vars = c("date"))
+ggplot(data=covid.mexico.total.lf , aes(x=date, y=value, group=variable, colour=variable)) +
+    geom_line(size=1) +
+    scale_color_discrete(name = "Indicator", labels=c("Cases", "Deaths"))+
+    scale_x_date(date_breaks = "week", date_labels = "%b %d")+
+    scale_y_continuous(breaks=c(50000, 100000, 200000, 300000, 400000, 500000, 750000),
+                     label=c("50k","100k", "200k", "300k", "400k", "500k", "750k"))+
+    ggtitle("COVID-19 Cumulative cases and deaths in México")+
+    labs(caption = plotscaption)+
+    ylab("")+
+    xlab("Date")+
+    theme_bw()+
+    theme(title = element_text(size=14, face="bold", colour = "black"),
+          axis.text.y = element_text(size=11, face="bold", colour = "black"), 
+          axis.text.x = element_text(size=11, face="bold", colour = "black"),
+          legend.position = "bottom",
+          legend.title = element_text(size = 14),
+          legend.text = element_text(size = 13),
+          legend.key.width = unit(1.5,"cm"))+
+    guides(colour = guide_legend(override.aes = list(size=2)))
+```
+
+## Total cases and deaths last month
+
+```{r fig.height=8, fig.width=15, warning=FALSE, wrap = 'div', out.extra="class=img-zoomable"}
+covid.mexico.total.lasttmonth <- covid.mexico.total[covid.mexico.total$date >= enddate-30, ]
+covid.mexico.total.lasttmonth.lf <- melt(covid.mexico.total.lasttmonth, id.vars = c("date"))
+ggplot(data=covid.mexico.total.lasttmonth.lf , aes(x=date, y=value, group=variable, colour=variable)) +
+    geom_line(size=1) +
+    scale_color_discrete(name = "Indicator", labels=c("Cases", "Deaths"))+
+    scale_x_date(date_breaks = "week", date_labels = "%b %d")+
+    scale_y_continuous(breaks=c(50000, 100000, 200000, 300000, 400000, 500000, 750000),
+                     label=c("50k","100k", "200k", "300k", "400k", "500k", "750k"))+
+    ggtitle("COVID-19 Cumulative cases and deaths in México - Last month")+
+    labs(caption = plotscaption)+
+    ylab("")+
+    xlab("Fecha")+
+    theme_bw()+
+    theme(title = element_text(size=14, face="bold", colour = "black"),
+          axis.text.y = element_text(size=11, face="bold", colour = "black"), 
+          axis.text.x = element_text(size=11, face="bold", colour = "black"),
+          legend.position = "bottom",
+          legend.title = element_text(size = 14),
+          legend.text = element_text(size = 13),
+          legend.key.width = unit(1.5,"cm"))+
+    guides(colour = guide_legend(override.aes = list(size=2)))
+```
+
+# COVID-19 cases and deaths in México per week {.tabset .tabset-fade}
+
+```{r data wrangling aggregate data by week, message=FALSE, warning=FALSE, results='hide'}
+covid.mexico <- covid.df[covid.df$location=='Mexico',]
+week.agg <- covid.mexico %>%
+  group_by(week = week(date)) %>%
+  summarise(mean_new_cases = mean(new_cases),
+            n = n(), 
+            loCI_new_cases = ci(new_cases)[2], 
+            hiCI_new_cases = ci(new_cases)[3], 
+            mean_new_deaths = mean(new_deaths), 
+            loCI_new_deaths = ci(new_deaths)[2], 
+            hiCI_new_deaths = ci(new_deaths)[3], 
+            total_new_cases = sum(new_cases), 
+            total_new_deaths = sum(new_deaths))
+# Weeks with zero mean new cases are deleted
+week.agg <- week.agg[which(week.agg$mean_new_cases > 0),]
+# Finding the date of the first week to be ploted
+firstweek <- min(week.agg$week)
+rowindex <- match(firstweek, week(covid.mexico[,"date"]))
+firstweek.date <- format(covid.mexico[rowindex, ]$date, "%d/%m/%Y")
+rm(firstweek, rowindex)
+# Finding the date of the last week to be ploted
+lastweek <- max(week.agg$week)
+rowindex <- match(lastweek, week(covid.mexico[,"date"]))
+lastweek.date <- format(covid.mexico[rowindex, ]$date, "%d/%m/%Y")
+rm(lastweek, rowindex)
+sublabel <- paste("Date range:", firstweek.date, "-", lastweek.date)
+```
+
+## Mean cases per week
+
+```{r fig.height=8, fig.width=15, warning=FALSE, wrap = 'div', out.extra="class=img-zoomable"}
+ggplot(data=week.agg, aes(x=as.character(week),y=mean_new_cases))+
+  geom_bar(stat = 'identity', aes(fill = mean_new_cases)) +
+  geom_errorbar(aes(ymin=loCI_new_cases, ymax=hiCI_new_cases), width=.2,
+                position=position_dodge(.9)) +
+  xlab("Week")+
+  ylab("Mean cases per week ± CI 95%")+
+  labs(title="Mean cases per week of COVID-19 in México",
+       subtitle = sublabel,
+       caption = plotscaption)+
+  scale_fill_gradient(name="Cases", low = "green", high = "red")+
+  theme_bw()+
+  theme(title = element_text(size=14, face="bold", colour = "black"),
+        axis.text.y = element_text(size=11, face="bold", colour = "black"),
+        axis.text.x = element_text(size=11, face="bold", colour = "black"))
+```
+
+## Mean deaths per week
+
+```{r fig.height=8, fig.width=15, warning=FALSE, wrap = 'div', out.extra="class=img-zoomable"}
+ggplot(data=week.agg, aes(x=as.character(week),y=mean_new_deaths))+
+  geom_bar(stat = 'identity', aes(fill = mean_new_deaths)) +
+  geom_errorbar(aes(ymin=loCI_new_deaths, ymax=hiCI_new_deaths), width=.2,
+                position=position_dodge(.9)) +
+  xlab("Week")+
+  ylab("Mean deaths per week ± CI 95%")+
+  labs(title="Mean deaths per week from COVID-19 in México",
+       subtitle = sublabel,
+       caption = plotscaption)+
+  scale_fill_gradient(name="Deaths", low = "green", high = "red")+
+  theme_bw()+
+  theme(title = element_text(size=14, face="bold", colour = "black"),
+        axis.text.y = element_text(size=11, face="bold", colour = "black"),
+        axis.text.x = element_text(size=11, face="bold", colour = "black"))
+```
+
+## Total cases per week
+
+```{r fig.height=8, fig.width=15, warning=FALSE, wrap = 'div', out.extra="class=img-zoomable"}
+ggplot(data=week.agg, aes(x=as.character(week),y=total_new_cases))+
+  geom_bar(stat = 'identity', aes(fill = total_new_cases)) +
+  xlab("Week")+
+  ylab("Total cases per week")+
+  labs(title="Total COVID-19 cases per week in México",
+       subtitle = sublabel,
+       caption = plotscaption)+
+  scale_fill_gradient(name="Total cases", low = "green", high = "red")+
+  theme_bw()+
+  theme(title = element_text(size=14, face="bold", colour = "black"),
+        axis.text.y = element_text(size=11, face="bold", colour = "black"),
+        axis.text.x = element_text(size=11, face="bold", colour = "black"))
+```
+
+## Total deaths per week
+
+```{r fig.height=8, fig.width=15, warning=FALSE, wrap = 'div', out.extra="class=img-zoomable"}
+ggplot(data=week.agg, aes(x=as.character(week),y=total_new_deaths))+
+  geom_bar(stat = 'identity', aes(fill = total_new_deaths)) +
+  xlab("Week")+
+  ylab("Total deaths per week")+
+  labs(title="Total COVID-19 deaths per week in México",
+       subtitle=sublabel,
+       caption = plotscaption)+
+  scale_fill_gradient(name="Total deaths", low = "green", high = "red")+
+  theme_bw()+
+  theme(title = element_text(size=14, face="bold", colour = "black"),
+        axis.text.y = element_text(size=11, face="bold", colour = "black"),
+        axis.text.x = element_text(size=11, face="bold", colour = "black"))
+```
+
+
+
+```{r message=FALSE, warning=FALSE, echo=FALSE}
+Sys.setlocale("LC_TIME",curr_locale)
+```
+
+<script>
+function zoomPlot(src){
+  	$('.imagepreview').attr('src', src);
+		$('#imagemodal').modal('show');   
+}
+
+$(document).ready(function () {
+    $(".img-zoomable").on('click', function(){
+      //var imageURL = $(this).attr('src');
+      //console.log("Plot clicked");
+      zoomPlot($(this).attr('src'));
+    });
+})
+</script>

@@ -6,6 +6,6 @@
 
 ### COVID-19
 
-#### Exploratory Data Analysis (EDA) COVID-19 in English
+#### [Exploratory Data Analysis (EDA) COVID-19 in English](EDA_covid19_ENG/)
 
 #### [Análisis Exploratorio de Datos (EDA) Covid-19 en Español](EDA_covid19_ESP/)
