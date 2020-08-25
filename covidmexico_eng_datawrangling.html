@@ -1,0 +1,1030 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+<meta name="author" content="Oscar Castro" />
+
+
+<title>Data Wrangling of COVID-19 México Data</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<script src="site_libs/kePrint-0.0.1/kePrint.js"></script>
+<link href="site_libs/font-awesome-5.1.0/css/all.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-5.1.0/css/v4-shims.css" rel="stylesheet" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto%20Mono">
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+<link rel="stylesheet" href="css/styles.css" type="text/css" />
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #ffffff;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+
+<nav class="navbar navbar-default navbar-fixed-top">
+   <div class="container">
+      <div class="navbar-header">
+         <a class="navbar-brand visible-xs" href="#">Oscar Castro</a>
+         <button class="navbar-toggle" data-target=".navbar-collapse" data-toggle="collapse">
+         <span class="icon-bar"></span>
+         <span class="icon-bar"></span>
+         <span class="icon-bar"></span>
+         </button>
+      </div>
+      <div class="collapse navbar-collapse">
+         <ul class="nav navbar-nav">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="projects.html">Projects</a></li>
+            <li><a href="portfolio.html">Portfolio</a></li>
+            <li><a href="publications.html">Publications</a></li>
+         </ul>
+         <ul class="nav navbar-nav navbar-right">
+            <li class="navbar-icon"><a href="mailto:oscarcastro@uas.edu.mx"><i class="fa fa-envelope-o"></i></a></li>
+            <li class="navbar-icon"><a href="https://github.com/oscarcastrolopez/"><i class="fa fa-github"></i></a></li>
+            <li class="navbar-icon"><a href="https://www.linkedin.com/in/oscar-castro-lopez-9b95b777/"><i class="fa fa-linkedin"></i></a></li>
+            <li class="navbar-icon"><a href="https://scholar.google.com/citations?user=BtXTraEAAAAJ"><i class="fa fa-graduation-cap"></i></a></li>
+         </ul>
+      </div>
+   </div>
+</nav>
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">Data Wrangling of COVID-19 México Data</h1>
+<h4 class="author">Oscar Castro</h4>
+<h4 class="date">16/08/2020</h4>
+
+</div>
+
+
+<div id="description" class="section level1">
+<h1>Description</h1>
+<p>This document describes the steps performed for data reading and transformation of COVID-19 data from México. The data is downloaded from the Mexican government data repository <a href="https://datos.gob.mx" class="uri">https://datos.gob.mx</a>. The actual data is on a csv file, but contains many categorical variables with numbers. Those numbers represent a category that it is described in another diccionary file. By using the dictionary the original csv file is transformed and each categorical variable is transformed by using the actual values to obtain a more descriptive dataset. The files are provided in the same Website. Additionally, there is another file with that describes each variable and to which catalog corresponds to.</p>
+<div id="data-reading" class="section level2">
+<h2>Data reading</h2>
+<p>The link to México’s COVID-19 related data is the following:</p>
+<p><a href="https://datos.gob.mx/busca/dataset/informacion-referente-a-casos-covid-19-en-mexico" class="uri">https://datos.gob.mx/busca/dataset/informacion-referente-a-casos-covid-19-en-mexico</a></p>
+<p>After downloading the data from the link, the csv is loaded into R.</p>
+<pre class="r"><code>covidmx &lt;- read.csv(&quot;data_covid19_mexico/200816COVID19MEXICO.csv&quot;)</code></pre>
+<p>The dataframe has the following structure.</p>
+<pre class="r"><code>str(covidmx)</code></pre>
+<pre><code>## &#39;data.frame&#39;:    1176931 obs. of  35 variables:
+##  $ FECHA_ACTUALIZACION: Factor w/ 1 level &quot;2020-08-16&quot;: 1 1 1 1 1 1 1 1 1 1 ...
+##  $ ID_REGISTRO        : Factor w/ 1176931 levels &quot;000001&quot;,&quot;000002&quot;,..: 1145126 625165 159252 725228 844154 58254 547194 402130 48832 382044 ...
+##  $ ORIGEN             : int  2 2 2 2 2 2 2 2 2 2 ...
+##  $ SECTOR             : int  3 3 3 3 3 3 4 3 4 3 ...
+##  $ ENTIDAD_UM         : int  15 25 27 15 25 15 19 25 9 2 ...
+##  $ SEXO               : int  1 1 2 2 1 2 1 1 2 1 ...
+##  $ ENTIDAD_NAC        : int  15 25 27 7 25 9 19 25 9 2 ...
+##  $ ENTIDAD_RES        : int  15 25 27 15 25 15 19 25 9 2 ...
+##  $ MUNICIPIO_RES      : int  76 6 6 81 6 87 10 6 5 2 ...
+##  $ TIPO_PACIENTE      : int  1 2 1 2 1 2 1 1 1 1 ...
+##  $ FECHA_INGRESO      : Factor w/ 229 levels &quot;2020-01-01&quot;,&quot;2020-01-02&quot;,..: 135 183 157 170 175 148 122 161 123 147 ...
+##  $ FECHA_SINTOMAS     : Factor w/ 229 levels &quot;2020-01-01&quot;,&quot;2020-01-02&quot;,..: 132 180 156 156 162 144 120 156 122 144 ...
+##  $ FECHA_DEF          : Factor w/ 175 levels &quot;2020-01-13&quot;,&quot;2020-01-14&quot;,..: 175 175 175 175 175 175 175 175 175 175 ...
+##  $ INTUBADO           : int  97 2 97 2 97 2 97 97 97 97 ...
+##  $ NEUMONIA           : int  2 1 2 1 2 1 2 2 2 2 ...
+##  $ EDAD               : int  33 25 51 40 45 33 43 50 52 45 ...
+##  $ NACIONALIDAD       : int  1 1 1 1 1 1 1 1 1 1 ...
+##  $ EMBARAZO           : int  2 2 97 97 2 97 2 2 97 2 ...
+##  $ HABLA_LENGUA_INDIG : int  2 2 2 2 2 2 2 2 2 99 ...
+##  $ DIABETES           : int  1 2 2 2 2 2 2 2 2 2 ...
+##  $ EPOC               : int  2 2 2 2 2 2 2 2 2 2 ...
+##  $ ASMA               : int  2 2 2 2 2 2 2 2 2 2 ...
+##  $ INMUSUPR           : int  2 2 2 2 2 2 2 2 2 2 ...
+##  $ HIPERTENSION       : int  2 2 2 2 2 2 2 1 2 2 ...
+##  $ OTRA_COM           : int  2 2 2 2 1 2 2 1 2 2 ...
+##  $ CARDIOVASCULAR     : int  2 2 2 2 2 2 2 1 2 2 ...
+##  $ OBESIDAD           : int  1 1 2 2 1 2 2 1 2 2 ...
+##  $ RENAL_CRONICA      : int  2 2 2 2 2 2 2 2 2 1 ...
+##  $ TABAQUISMO         : int  2 2 2 2 2 2 2 2 2 2 ...
+##  $ OTRO_CASO          : int  1 99 2 2 1 2 99 1 99 1 ...
+##  $ RESULTADO          : int  1 1 1 1 1 1 1 1 1 1 ...
+##  $ MIGRANTE           : int  99 99 99 99 99 99 99 99 99 99 ...
+##  $ PAIS_NACIONALIDAD  : Factor w/ 114 levels &quot;Alemania&quot;,&quot;Archipiélago de Svalbard&quot;,..: 69 69 69 69 69 69 69 69 69 69 ...
+##  $ PAIS_ORIGEN        : Factor w/ 71 levels &quot;99&quot;,&quot;Alemania&quot;,..: 1 1 1 1 1 1 1 1 1 1 ...
+##  $ UCI                : int  97 2 97 2 97 2 97 97 97 97 ...</code></pre>
+<p>The file that describes each variable is loaded, the description and format of each variable is shown in the following table.</p>
+<pre class="r"><code>library(readxl)
+library(kableExtra)
+columnInformation &lt;- read_excel(&quot;data_covid19_mexico/diccionario_datos_covid19/Descriptores_0419.xlsx&quot;,
+                                  sheet=1)
+kable(columnInformation, format = &quot;html&quot;, align = &quot;cllc&quot;, 
+      caption=&quot;Description of each column&quot;) %&gt;% 
+  kable_styling(bootstrap_options = c(&quot;striped&quot;, &quot;hover&quot;, &quot;condensed&quot;, &quot;responsive&quot;), 
+                full_width = T)</code></pre>
+<table class="table table-striped table-hover table-condensed table-responsive" style="margin-left: auto; margin-right: auto;">
+<caption>
+Description of each column
+</caption>
+<thead>
+<tr>
+<th style="text-align:center;">
+Nº
+</th>
+<th style="text-align:left;">
+NOMBRE DE VARIABLE
+</th>
+<th style="text-align:left;">
+DESCRIPCIÓN DE VARIABLE
+</th>
+<th style="text-align:center;">
+FORMATO O FUENTE
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:left;">
+FECHA_ACTUALIZACION
+</td>
+<td style="text-align:left;">
+La base de datos se alimenta diariamente, esta variable permite identificar la fecha de la ultima actualizacion.
+</td>
+<td style="text-align:center;">
+AAAA-MM-DD
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:left;">
+ID_REGISTRO
+</td>
+<td style="text-align:left;">
+Número identificador del caso
+</td>
+<td style="text-align:center;">
+TEXTO
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+3
+</td>
+<td style="text-align:left;">
+ORIGEN
+</td>
+<td style="text-align:left;">
+La vigilancia centinela se realiza a través del sistema de unidades de salud monitoras de enfermedades respiratorias (USMER). Las USMER incluyen unidades médicas del primer, segundo o tercer nivel de atención y también participan como USMER las unidades de tercer nivel que por sus características contribuyen a ampliar el panorama de información epidemiológica, entre ellas las que cuenten con especialidad de neumología, infectología o pediatría. (Categorías en Catalógo Anexo).
+</td>
+<td style="text-align:center;">
+CATÁLOGO: ORIGEN
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+4
+</td>
+<td style="text-align:left;">
+SECTOR
+</td>
+<td style="text-align:left;">
+Identifica el tipo de institución del Sistema Nacional de Salud que brindó la atención.
+</td>
+<td style="text-align:center;">
+CATÁLOGO: SECTOR
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+5
+</td>
+<td style="text-align:left;">
+ENTIDAD_UM
+</td>
+<td style="text-align:left;">
+Identifica la entidad donde se ubica la unidad medica que brindó la atención.
+</td>
+<td style="text-align:center;">
+CATALÓGO: ENTIDADES
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+6
+</td>
+<td style="text-align:left;">
+SEXO
+</td>
+<td style="text-align:left;">
+Identifica al sexo del paciente.
+</td>
+<td style="text-align:center;">
+CATÁLOGO: SEXO
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+7
+</td>
+<td style="text-align:left;">
+ENTIDAD_NAC
+</td>
+<td style="text-align:left;">
+Identifica la entidad de nacimiento del paciente.
+</td>
+<td style="text-align:center;">
+CATALÓGO: ENTIDADES
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+8
+</td>
+<td style="text-align:left;">
+ENTIDAD_RES
+</td>
+<td style="text-align:left;">
+Identifica la entidad de residencia del paciente.
+</td>
+<td style="text-align:center;">
+CATALÓGO: ENTIDADES
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+9
+</td>
+<td style="text-align:left;">
+MUNICIPIO_RES
+</td>
+<td style="text-align:left;">
+Identifica el municipio de residencia del paciente.
+</td>
+<td style="text-align:center;">
+CATALÓGO: MUNICIPIOS
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+10
+</td>
+<td style="text-align:left;">
+TIPO_PACIENTE
+</td>
+<td style="text-align:left;">
+Identifica el tipo de atención que recibió el paciente en la unidad. Se denomina como ambulatorio si regresó a su casa o se denomina como hospitalizado si fue ingresado a hospitalización.
+</td>
+<td style="text-align:center;">
+CATÁLOGO: TIPO_PACIENTE
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+11
+</td>
+<td style="text-align:left;">
+FECHA_INGRESO
+</td>
+<td style="text-align:left;">
+Identifica la fecha de ingreso del paciente a la unidad de atención.
+</td>
+<td style="text-align:center;">
+AAAA-MM-DD
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+12
+</td>
+<td style="text-align:left;">
+FECHA_SINTOMAS
+</td>
+<td style="text-align:left;">
+Idenitifica la fecha en que inició la sintomatología del paciente.
+</td>
+<td style="text-align:center;">
+AAAA-MM-DD
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+13
+</td>
+<td style="text-align:left;">
+FECHA_DEF
+</td>
+<td style="text-align:left;">
+Identifica la fecha en que el paciente falleció.
+</td>
+<td style="text-align:center;">
+AAAA-MM-DD
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+14
+</td>
+<td style="text-align:left;">
+INTUBADO
+</td>
+<td style="text-align:left;">
+Identifica si el paciente requirió de intubación.
+</td>
+<td style="text-align:center;">
+CATÁLOGO: SI_ NO
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+15
+</td>
+<td style="text-align:left;">
+NEUMONIA
+</td>
+<td style="text-align:left;">
+Identifica si al paciente se le diagnosticó con neumonía.
+</td>
+<td style="text-align:center;">
+CATÁLOGO: SI_ NO
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+16
+</td>
+<td style="text-align:left;">
+EDAD
+</td>
+<td style="text-align:left;">
+Identifica la edad del paciente.
+</td>
+<td style="text-align:center;">
+NÚMERICA EN AÑOS
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+17
+</td>
+<td style="text-align:left;">
+NACIONALIDAD
+</td>
+<td style="text-align:left;">
+Identifica si el paciente es mexicano o extranjero.
+</td>
+<td style="text-align:center;">
+CATÁLOGO: NACIONALIDAD
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+18
+</td>
+<td style="text-align:left;">
+EMBARAZO
+</td>
+<td style="text-align:left;">
+Identifica si la paciente está embarazada.
+</td>
+<td style="text-align:center;">
+CATÁLOGO: SI_ NO
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+19
+</td>
+<td style="text-align:left;">
+HABLA_LENGUA_INDIG
+</td>
+<td style="text-align:left;">
+Identifica si el paciente habla lengua índigena.
+</td>
+<td style="text-align:center;">
+CATÁLOGO: SI_ NO
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+20
+</td>
+<td style="text-align:left;">
+DIABETES
+</td>
+<td style="text-align:left;">
+Identifica si el paciente tiene un diagnóstico de diabetes.
+</td>
+<td style="text-align:center;">
+CATÁLOGO: SI_ NO
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+21
+</td>
+<td style="text-align:left;">
+EPOC
+</td>
+<td style="text-align:left;">
+Identifica si el paciente tiene un diagnóstico de EPOC.
+</td>
+<td style="text-align:center;">
+CATÁLOGO: SI_ NO
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+22
+</td>
+<td style="text-align:left;">
+ASMA
+</td>
+<td style="text-align:left;">
+Identifica si el paciente tiene un diagnóstico de asma.
+</td>
+<td style="text-align:center;">
+CATÁLOGO: SI_ NO
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+23
+</td>
+<td style="text-align:left;">
+INMUSUPR
+</td>
+<td style="text-align:left;">
+Identifica si el paciente presenta inmunosupresión.
+</td>
+<td style="text-align:center;">
+CATÁLOGO: SI_ NO
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+24
+</td>
+<td style="text-align:left;">
+HIPERTENSION
+</td>
+<td style="text-align:left;">
+Identifica si el paciente tiene un diagnóstico de hipertensión.
+</td>
+<td style="text-align:center;">
+CATÁLOGO: SI_ NO
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+25
+</td>
+<td style="text-align:left;">
+OTRAS_COM
+</td>
+<td style="text-align:left;">
+Identifica si el paciente tiene diagnóstico de otras enfermedades.
+</td>
+<td style="text-align:center;">
+CATÁLOGO: SI_ NO
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+26
+</td>
+<td style="text-align:left;">
+CARDIOVASCULAR
+</td>
+<td style="text-align:left;">
+Identifica si el paciente tiene un diagnóstico de enfermedades cardiovasculares.
+</td>
+<td style="text-align:center;">
+CATÁLOGO: SI_ NO
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+27
+</td>
+<td style="text-align:left;">
+OBESIDAD
+</td>
+<td style="text-align:left;">
+Identifica si el paciente tiene diagnóstico de obesidad.
+</td>
+<td style="text-align:center;">
+CATÁLOGO: SI_ NO
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+28
+</td>
+<td style="text-align:left;">
+RENAL_CRONICA
+</td>
+<td style="text-align:left;">
+Identifica si el paciente tiene diagnóstico de insuficiencia renal crónica.
+</td>
+<td style="text-align:center;">
+CATÁLOGO: SI_ NO
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+29
+</td>
+<td style="text-align:left;">
+TABAQUISMO
+</td>
+<td style="text-align:left;">
+Identifica si el paciente tiene hábito de tabaquismo.
+</td>
+<td style="text-align:center;">
+CATÁLOGO: SI_ NO
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+30
+</td>
+<td style="text-align:left;">
+OTRO_CASO
+</td>
+<td style="text-align:left;">
+Identifica si el paciente tuvo contacto con algún otro caso diagnósticado con SARS CoV-2
+</td>
+<td style="text-align:center;">
+CATÁLOGO: SI_ NO
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+31
+</td>
+<td style="text-align:left;">
+RESULTADO
+</td>
+<td style="text-align:left;">
+Identifica el resultado del análisis de la muestra reportado por el laboratorio de la Red Nacional de Laboratorios de Vigilancia Epidemiológica (INDRE, LESP y LAVE). (Catálogo de resultados diagnósticos anexo).
+</td>
+<td style="text-align:center;">
+CATÁLOGO: RESULTADO
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+32
+</td>
+<td style="text-align:left;">
+MIGRANTE
+</td>
+<td style="text-align:left;">
+Identifica si el paciente es una persona migrante.
+</td>
+<td style="text-align:center;">
+CATÁLOGO: SI_ NO
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+33
+</td>
+<td style="text-align:left;">
+PAIS_NACIONALIDAD
+</td>
+<td style="text-align:left;">
+Identifica la nacionalidad del paciente.
+</td>
+<td style="text-align:center;">
+TEXTO, 99= SE IGNORA
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+34
+</td>
+<td style="text-align:left;">
+PAIS_ORIGEN
+</td>
+<td style="text-align:left;">
+Identifica el país del que partió el paciente rumbo a México.
+</td>
+<td style="text-align:center;">
+TEXTO, 97= NO APLICA
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+35
+</td>
+<td style="text-align:left;">
+UCI
+</td>
+<td style="text-align:left;">
+Identifica si el paciente requirió ingresar a una Unidad de Cuidados Intensivos.
+</td>
+<td style="text-align:center;">
+CATÁLOGO: SI_ NO
+</td>
+</tr>
+</tbody>
+</table>
+<p>On an Excel file on each sheet there is a dictionary for the categorical variables. The file is loaded into a list. Each sheet (or catalog) becomes an element of the list.</p>
+<pre class="r"><code>dictionaries &lt;- NULL
+dict.colnames &lt;- c(&quot;ORIGEN&quot;, &quot;SECTOR&quot;, &quot;SEXO&quot;, &quot;TIPO_PACIENTE&quot;, &quot;SI_NO&quot;, 
+                      &quot;NACIONALIDAD&quot;, &quot;RESULTADO&quot;, &quot;ENTIDADES&quot;, &quot;MUNICIPIOS&quot;)
+i &lt;- 1
+for(s in dict.colnames){
+  dictionaries[[s]] &lt;- read_excel(&quot;data_covid19_mexico/diccionario_datos_covid19/Catalogos_0412.xlsx&quot;,
+                                  sheet=i)
+  i &lt;- i + 1
+}</code></pre>
+<p>The categorical variables are converted into class <em>factor</em> and the levels and labels are obtained from the dictionaries list.</p>
+<pre class="r"><code>covidmx$ORIGEN &lt;- factor(covidmx$ORIGEN, 
+                         levels=dictionaries[[&quot;ORIGEN&quot;]]$CLAVE, 
+                         labels=dictionaries[[&quot;ORIGEN&quot;]]$DESCRIPCIÓN)
+covidmx$SECTOR &lt;- factor(covidmx$SECTOR, 
+                         levels=dictionaries[[&quot;SECTOR&quot;]]$CLAVE, 
+                         labels=dictionaries[[&quot;SECTOR&quot;]]$DESCRIPCIÓN)
+covidmx$SEXO &lt;- factor(covidmx$SEXO, 
+                       levels=dictionaries[[&quot;SEXO&quot;]]$CLAVE, 
+                       labels=dictionaries[[&quot;SEXO&quot;]]$DESCRIPCIÓN)
+covidmx$TIPO_PACIENTE &lt;- factor(covidmx$TIPO_PACIENTE, 
+                                levels=dictionaries[[&quot;TIPO_PACIENTE&quot;]]$CLAVE, 
+                                labels=dictionaries[[&quot;TIPO_PACIENTE&quot;]]$DESCRIPCIÓN)
+covidmx$NACIONALIDAD &lt;- factor(covidmx$NACIONALIDAD, 
+                               levels=dictionaries[[&quot;NACIONALIDAD&quot;]]$CLAVE, 
+                               labels=dictionaries[[&quot;NACIONALIDAD&quot;]]$DESCRIPCIÓN)
+covidmx$RESULTADO &lt;- factor(covidmx$RESULTADO, 
+                            levels=dictionaries[[&quot;RESULTADO&quot;]]$CLAVE, 
+                            labels=dictionaries[[&quot;RESULTADO&quot;]]$DESCRIPCIÓN)
+
+## Labels of dictionari of ENTIDADES and MUNICIPIOS is character, it is transformed to integer
+dictionaries[[&quot;ENTIDADES&quot;]]$CLAVE_ENTIDAD &lt;- as.integer(dictionaries[[&quot;ENTIDADES&quot;]]$CLAVE_ENTIDAD)
+dictionaries[[&quot;MUNICIPIOS&quot;]]$CLAVE_MUNICIPIO &lt;- as.integer(dictionaries[[&quot;MUNICIPIOS&quot;]]$CLAVE_MUNICIPIO)
+
+covidmx$ENTIDAD_NAC &lt;- factor(covidmx$ENTIDAD_NAC, 
+                              levels=dictionaries[[&quot;ENTIDADES&quot;]]$CLAVE_ENTIDAD, 
+                              labels=dictionaries[[&quot;ENTIDADES&quot;]]$ENTIDAD_FEDERATIVA)
+covidmx$ENTIDAD_RES &lt;- factor(covidmx$ENTIDAD_RES, 
+                              levels=dictionaries[[&quot;ENTIDADES&quot;]]$CLAVE_ENTIDAD, 
+                              labels=dictionaries[[&quot;ENTIDADES&quot;]]$ENTIDAD_FEDERATIVA)
+covidmx$ENTIDAD_UM &lt;- factor(covidmx$ENTIDAD_UM, 
+                             levels=dictionaries[[&quot;ENTIDADES&quot;]]$CLAVE_ENTIDAD, 
+                             labels=dictionaries[[&quot;ENTIDADES&quot;]]$ENTIDAD_FEDERATIVA)
+covidmx$MUNICIPIO_RES &lt;- factor(covidmx$MUNICIPIO_RES, 
+                                levels=dictionaries[[&quot;MUNICIPIOS&quot;]]$CLAVE_MUNICIPIO, 
+                                labels=dictionaries[[&quot;MUNICIPIOS&quot;]]$MUNICIPIO)
+## SI-NO columns
+si_no.columnames &lt;- c(&quot;INTUBADO&quot;, &quot;NEUMONIA&quot;, &quot;EMBARAZO&quot;, &quot;HABLA_LENGUA_INDIG&quot;, 
+                      &quot;DIABETES&quot;, &quot;EPOC&quot;, &quot;ASMA&quot;, &quot;INMUSUPR&quot;, &quot;HIPERTENSION&quot;, 
+                      &quot;OTRA_COM&quot;, &quot;CARDIOVASCULAR&quot;, &quot;OBESIDAD&quot;, &quot;RENAL_CRONICA&quot;,
+                      &quot;TABAQUISMO&quot;, &quot;OTRO_CASO&quot;, &quot;MIGRANTE&quot;, &quot;UCI&quot;)
+
+for(s in si_no.columnames){
+  covidmx[[s]] &lt;- factor(covidmx[[s]],
+                         levels=dictionaries[[&quot;SI_NO&quot;]]$CLAVE,
+                         labels=dictionaries[[&quot;SI_NO&quot;]]$DESCRIPCIÓN)
+}
+
+## Clean all temporary variables
+rm(i, s, dict.colnames, si_no.columnames, dictionaries)</code></pre>
+<p>The structure of the transformed dataframe is the following.</p>
+<pre class="r"><code>str(covidmx)</code></pre>
+<pre><code>## &#39;data.frame&#39;:    1176931 obs. of  35 variables:
+##  $ FECHA_ACTUALIZACION: Factor w/ 1 level &quot;2020-08-16&quot;: 1 1 1 1 1 1 1 1 1 1 ...
+##  $ ID_REGISTRO        : Factor w/ 1176931 levels &quot;000001&quot;,&quot;000002&quot;,..: 1145126 625165 159252 725228 844154 58254 547194 402130 48832 382044 ...
+##  $ ORIGEN             : Factor w/ 3 levels &quot;USMER&quot;,&quot;FUERA DE USMER&quot;,..: 2 2 2 2 2 2 2 2 2 2 ...
+##  $ SECTOR             : Factor w/ 14 levels &quot;CRUZ ROJA&quot;,&quot;DIF&quot;,..: 3 3 3 3 3 3 4 3 4 3 ...
+##  $ ENTIDAD_UM         : Factor w/ 36 levels &quot;AGUASCALIENTES&quot;,..: 15 25 27 15 25 15 19 25 9 2 ...
+##  $ SEXO               : Factor w/ 3 levels &quot;MUJER&quot;,&quot;HOMBRE&quot;,..: 1 1 2 2 1 2 1 1 2 1 ...
+##  $ ENTIDAD_NAC        : Factor w/ 36 levels &quot;AGUASCALIENTES&quot;,..: 15 25 27 7 25 9 19 25 9 2 ...
+##  $ ENTIDAD_RES        : Factor w/ 36 levels &quot;AGUASCALIENTES&quot;,..: 15 25 27 15 25 15 19 25 9 2 ...
+##  $ MUNICIPIO_RES      : Factor w/ 2326 levels &quot;AGUASCALIENTES&quot;,..: 156 6 6 161 6 167 10 6 5 2 ...
+##  $ TIPO_PACIENTE      : Factor w/ 3 levels &quot;AMBULATORIO&quot;,..: 1 2 1 2 1 2 1 1 1 1 ...
+##  $ FECHA_INGRESO      : Factor w/ 229 levels &quot;2020-01-01&quot;,&quot;2020-01-02&quot;,..: 135 183 157 170 175 148 122 161 123 147 ...
+##  $ FECHA_SINTOMAS     : Factor w/ 229 levels &quot;2020-01-01&quot;,&quot;2020-01-02&quot;,..: 132 180 156 156 162 144 120 156 122 144 ...
+##  $ FECHA_DEF          : Factor w/ 175 levels &quot;2020-01-13&quot;,&quot;2020-01-14&quot;,..: 175 175 175 175 175 175 175 175 175 175 ...
+##  $ INTUBADO           : Factor w/ 5 levels &quot;SI&quot;,&quot;NO&quot;,&quot;NO APLICA&quot;,..: 3 2 3 2 3 2 3 3 3 3 ...
+##  $ NEUMONIA           : Factor w/ 5 levels &quot;SI&quot;,&quot;NO&quot;,&quot;NO APLICA&quot;,..: 2 1 2 1 2 1 2 2 2 2 ...
+##  $ EDAD               : int  33 25 51 40 45 33 43 50 52 45 ...
+##  $ NACIONALIDAD       : Factor w/ 3 levels &quot;MEXICANA&quot;,&quot;EXTRANJERA&quot;,..: 1 1 1 1 1 1 1 1 1 1 ...
+##  $ EMBARAZO           : Factor w/ 5 levels &quot;SI&quot;,&quot;NO&quot;,&quot;NO APLICA&quot;,..: 2 2 3 3 2 3 2 2 3 2 ...
+##  $ HABLA_LENGUA_INDIG : Factor w/ 5 levels &quot;SI&quot;,&quot;NO&quot;,&quot;NO APLICA&quot;,..: 2 2 2 2 2 2 2 2 2 5 ...
+##  $ DIABETES           : Factor w/ 5 levels &quot;SI&quot;,&quot;NO&quot;,&quot;NO APLICA&quot;,..: 1 2 2 2 2 2 2 2 2 2 ...
+##  $ EPOC               : Factor w/ 5 levels &quot;SI&quot;,&quot;NO&quot;,&quot;NO APLICA&quot;,..: 2 2 2 2 2 2 2 2 2 2 ...
+##  $ ASMA               : Factor w/ 5 levels &quot;SI&quot;,&quot;NO&quot;,&quot;NO APLICA&quot;,..: 2 2 2 2 2 2 2 2 2 2 ...
+##  $ INMUSUPR           : Factor w/ 5 levels &quot;SI&quot;,&quot;NO&quot;,&quot;NO APLICA&quot;,..: 2 2 2 2 2 2 2 2 2 2 ...
+##  $ HIPERTENSION       : Factor w/ 5 levels &quot;SI&quot;,&quot;NO&quot;,&quot;NO APLICA&quot;,..: 2 2 2 2 2 2 2 1 2 2 ...
+##  $ OTRA_COM           : Factor w/ 5 levels &quot;SI&quot;,&quot;NO&quot;,&quot;NO APLICA&quot;,..: 2 2 2 2 1 2 2 1 2 2 ...
+##  $ CARDIOVASCULAR     : Factor w/ 5 levels &quot;SI&quot;,&quot;NO&quot;,&quot;NO APLICA&quot;,..: 2 2 2 2 2 2 2 1 2 2 ...
+##  $ OBESIDAD           : Factor w/ 5 levels &quot;SI&quot;,&quot;NO&quot;,&quot;NO APLICA&quot;,..: 1 1 2 2 1 2 2 1 2 2 ...
+##  $ RENAL_CRONICA      : Factor w/ 5 levels &quot;SI&quot;,&quot;NO&quot;,&quot;NO APLICA&quot;,..: 2 2 2 2 2 2 2 2 2 1 ...
+##  $ TABAQUISMO         : Factor w/ 5 levels &quot;SI&quot;,&quot;NO&quot;,&quot;NO APLICA&quot;,..: 2 2 2 2 2 2 2 2 2 2 ...
+##  $ OTRO_CASO          : Factor w/ 5 levels &quot;SI&quot;,&quot;NO&quot;,&quot;NO APLICA&quot;,..: 1 5 2 2 1 2 5 1 5 1 ...
+##  $ RESULTADO          : Factor w/ 3 levels &quot;Positivo SARS-CoV-2&quot;,..: 1 1 1 1 1 1 1 1 1 1 ...
+##  $ MIGRANTE           : Factor w/ 5 levels &quot;SI&quot;,&quot;NO&quot;,&quot;NO APLICA&quot;,..: 5 5 5 5 5 5 5 5 5 5 ...
+##  $ PAIS_NACIONALIDAD  : Factor w/ 114 levels &quot;Alemania&quot;,&quot;Archipiélago de Svalbard&quot;,..: 69 69 69 69 69 69 69 69 69 69 ...
+##  $ PAIS_ORIGEN        : Factor w/ 71 levels &quot;99&quot;,&quot;Alemania&quot;,..: 1 1 1 1 1 1 1 1 1 1 ...
+##  $ UCI                : Factor w/ 5 levels &quot;SI&quot;,&quot;NO&quot;,&quot;NO APLICA&quot;,..: 3 2 3 2 3 2 3 3 3 3 ...</code></pre>
+<p>The dataframe with COVID-19 data is stored in a csv for further analysis.</p>
+<pre class="r"><code>write.csv(covidmx, file = &quot;data_covid19_mexico/200816COVID19MEXICO_T.csv&quot;)</code></pre>
+</div>
+</div>
+
+<div class="row">
+<footer>
+    <div class="container text-center">
+    <p>oscarcastrolopez.github.io</p>
+    </div>
+</footer>
+</div>
+
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

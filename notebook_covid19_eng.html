@@ -1,0 +1,3931 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+<meta name="author" content="Oscar Castro" />
+
+
+<title>Exploratory Data Analysis (EDA) COVID-19</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<script src="site_libs/navigation-1.1/codefolding.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<script src="site_libs/kePrint-0.0.1/kePrint.js"></script>
+<link href="site_libs/font-awesome-5.1.0/css/all.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-5.1.0/css/v4-shims.css" rel="stylesheet" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto%20Mono">
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+<link rel="stylesheet" href="notebook.css" type="text/css" />
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #ffffff;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+<style type="text/css">
+.code-folding-btn { margin-bottom: 4px; }
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+
+<nav class="navbar navbar-default navbar-fixed-top">
+   <div class="container">
+      <div class="navbar-header">
+         <a class="navbar-brand visible-xs" href="#">Oscar Castro</a>
+         <button class="navbar-toggle" data-target=".navbar-collapse" data-toggle="collapse">
+         <span class="icon-bar"></span>
+         <span class="icon-bar"></span>
+         <span class="icon-bar"></span>
+         </button>
+      </div>
+      <div class="collapse navbar-collapse">
+         <ul class="nav navbar-nav">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="projects.html">Projects</a></li>
+            <li><a href="portfolio.html">Portfolio</a></li>
+            <li><a href="publications.html">Publications</a></li>
+         </ul>
+         <ul class="nav navbar-nav navbar-right">
+            <li class="navbar-icon"><a href="mailto:oscarcastro@uas.edu.mx"><i class="fa fa-envelope-o"></i></a></li>
+            <li class="navbar-icon"><a href="https://github.com/oscarcastrolopez/"><i class="fa fa-github"></i></a></li>
+            <li class="navbar-icon"><a href="https://www.linkedin.com/in/oscar-castro-lopez-9b95b777/"><i class="fa fa-linkedin"></i></a></li>
+            <li class="navbar-icon"><a href="https://scholar.google.com/citations?user=BtXTraEAAAAJ"><i class="fa fa-graduation-cap"></i></a></li>
+         </ul>
+      </div>
+   </div>
+</nav>
+
+<div class="fluid-row" id="header">
+
+<div class="btn-group pull-right">
+<button type="button" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span>Code</span> <span class="caret"></span></button>
+<ul class="dropdown-menu" style="min-width: 50px;">
+<li><a id="rmd-show-all-code" href="#">Show All Code</a></li>
+<li><a id="rmd-hide-all-code" href="#">Hide All Code</a></li>
+</ul>
+</div>
+
+
+
+<h1 class="title toc-ignore">Exploratory Data Analysis (EDA) COVID-19</h1>
+<h4 class="author">Oscar Castro</h4>
+<h4 class="date">Friday, August 21 of 2020</h4>
+
+</div>
+
+<div id="TOC">
+<ul>
+<li><a href="#description">Description</a></li>
+<li><a href="#rankings-of-countries-with-the-variables-of-totals">Rankings of countries with the variables of totals</a></li>
+<li><a href="#trends-of-covid-19-cases-and-deaths-with-variables-new_cases-and-new_deaths">Trends of COVID-19 cases and deaths with variables: <em>new_cases</em> and <em>new_deaths</em></a></li>
+<li><a href="#cumulative-covid-19-cases-and-deaths">Cumulative COVID-19 Cases and Deaths</a></li>
+<li><a href="#comparison-of-covid-19-cases-and-deaths-curves-in-mexico">Comparison of COVID-19 cases and deaths curves in Mexico</a></li>
+<li><a href="#covid-19-cases-and-deaths-in-méxico-per-week">COVID-19 cases and deaths in México per week</a></li>
+</ul>
+</div>
+
+<script>
+$(document).load(function () {
+  console.log('executed');
+});
+
+var modalhtml = "<div class=\"modal fullscreen fullscreen-modal fade\" id=\"imagemodal\" tabindex=\"-1\" role=\"dialog\" aria-labelledby=\"myModalLabel\" aria-hidden=\"true\">" +
+  "<div class=\"modal-dialog\">" +
+    "<div class=\"modal-content\">" +
+      "<div class=\"modal-body\">" +
+      	"<button type=\"button\" class=\"close\" data-dismiss=\"modal\"><span aria-hidden=\"true\">&times;</span><span class=\"sr-only\">Close</span></button>" +
+        "<img src=\"\" class=\"imagepreview\" style=\"width: 100%;\" >" +
+      "</div>" +
+    "</div>" +
+  "</div>" +
+"</div>";
+$('body').prepend(modalhtml);
+</script>
+<div id="description" class="section level1">
+<h1>Description</h1>
+<p>This is an exploratory data analysis for educational purposes. The analysis is carried out with data related to COVID-19 reported by various countries. The data is obtained from the Website: <a href="https://ourworldindata.org/coronavirus-source-data" class="uri">https://ourworldindata.org/coronavirus-source-data</a>. The site’s data set is constantly updated. <strong>The results of the analysis changes according to the day the code is executed</strong>.</p>
+<div id="data-reading" class="section level4">
+<h4>Data reading</h4>
+<p>The data set is loaded directly from the Website to obtain information updated according to the execution day of the code.</p>
+<pre class="r"><code>covid.df &lt;- read.csv(&quot;https://covid.ourworldindata.org/data/owid-covid-data.csv&quot;)</code></pre>
+<p>Required packages are loaded.</p>
+<pre class="r"><code>library(ggplot2)
+library(knitr)
+library(reshape2)
+library(kableExtra)
+#library(dplyr)
+library(tidyverse)
+library(lubridate)
+library(gmodels)
+plotscaption &lt;- &quot;oscarcastrolopez.github.io&quot;</code></pre>
+</div>
+<div id="display-of-the-dataframe-structure-with-its-variables-and-their-type." class="section level4">
+<h4>Display of the dataframe structure with its variables and their type.</h4>
+<pre class="r"><code>str(covid.df)</code></pre>
+<pre><code>## &#39;data.frame&#39;:    38638 obs. of  40 variables:
+##  $ iso_code                       : Factor w/ 212 levels &quot;&quot;,&quot;ABW&quot;,&quot;AFG&quot;,..: 2 2 2 2 2 2 2 2 2 2 ...
+##  $ continent                      : Factor w/ 7 levels &quot;&quot;,&quot;Africa&quot;,&quot;Asia&quot;,..: 5 5 5 5 5 5 5 5 5 5 ...
+##  $ location                       : Factor w/ 212 levels &quot;Afghanistan&quot;,..: 10 10 10 10 10 10 10 10 10 10 ...
+##  $ date                           : Factor w/ 235 levels &quot;2019-12-31&quot;,&quot;2020-01-01&quot;,..: 74 80 81 82 83 84 85 86 87 88 ...
+##  $ total_cases                    : num  2 NA 4 NA NA NA 12 17 19 28 ...
+##  $ new_cases                      : num  2 NA 2 NA NA NA 8 5 2 9 ...
+##  $ new_cases_smoothed             : num  NA 0.286 0.286 0.286 0.286 ...
+##  $ total_deaths                   : num  0 NA 0 NA NA NA 0 0 0 0 ...
+##  $ new_deaths                     : num  0 NA 0 NA NA NA 0 0 0 0 ...
+##  $ new_deaths_smoothed            : num  NA 0 0 0 0 0 0 0 0 0 ...
+##  $ total_cases_per_million        : num  18.7 NA 37.5 NA NA ...
+##  $ new_cases_per_million          : num  18.7 NA 18.7 NA NA ...
+##  $ new_cases_smoothed_per_million : num  NA 2.68 2.68 2.68 2.68 ...
+##  $ total_deaths_per_million       : num  0 NA 0 NA NA NA 0 0 0 0 ...
+##  $ new_deaths_per_million         : num  0 NA 0 NA NA NA 0 0 0 0 ...
+##  $ new_deaths_smoothed_per_million: num  NA 0 0 0 0 0 0 0 0 0 ...
+##  $ new_tests                      : num  NA NA NA NA NA NA NA NA NA NA ...
+##  $ total_tests                    : num  NA NA NA NA NA NA NA NA NA NA ...
+##  $ total_tests_per_thousand       : num  NA NA NA NA NA NA NA NA NA NA ...
+##  $ new_tests_per_thousand         : num  NA NA NA NA NA NA NA NA NA NA ...
+##  $ new_tests_smoothed             : num  NA NA NA NA NA NA NA NA NA NA ...
+##  $ new_tests_smoothed_per_thousand: num  NA NA NA NA NA NA NA NA NA NA ...
+##  $ tests_per_case                 : num  NA NA NA NA NA NA NA NA NA NA ...
+##  $ positive_rate                  : num  NA NA NA NA NA NA NA NA NA NA ...
+##  $ tests_units                    : Factor w/ 7 levels &quot;&quot;,&quot;people tested&quot;,..: 1 1 1 1 1 1 1 1 1 1 ...
+##  $ stringency_index               : num  0 33.3 33.3 44.4 44.4 ...
+##  $ population                     : num  106766 106766 106766 106766 106766 ...
+##  $ population_density             : num  585 585 585 585 585 ...
+##  $ median_age                     : num  41.2 41.2 41.2 41.2 41.2 41.2 41.2 41.2 41.2 41.2 ...
+##  $ aged_65_older                  : num  13.1 13.1 13.1 13.1 13.1 ...
+##  $ aged_70_older                  : num  7.45 7.45 7.45 7.45 7.45 ...
+##  $ gdp_per_capita                 : num  35974 35974 35974 35974 35974 ...
+##  $ extreme_poverty                : num  NA NA NA NA NA NA NA NA NA NA ...
+##  $ cardiovasc_death_rate          : num  NA NA NA NA NA NA NA NA NA NA ...
+##  $ diabetes_prevalence            : num  11.6 11.6 11.6 11.6 11.6 ...
+##  $ female_smokers                 : num  NA NA NA NA NA NA NA NA NA NA ...
+##  $ male_smokers                   : num  NA NA NA NA NA NA NA NA NA NA ...
+##  $ handwashing_facilities         : num  NA NA NA NA NA NA NA NA NA NA ...
+##  $ hospital_beds_per_thousand     : num  NA NA NA NA NA NA NA NA NA NA ...
+##  $ life_expectancy                : num  76.3 76.3 76.3 76.3 76.3 ...</code></pre>
+<p>A detailed description of each variable of the data set can be found on the following Website: <a href="https://github.com/owid/covid-19-data/blob/master/public/data/owid-covid-codebook.csv" class="uri">https://github.com/owid/covid-19-data/blob/master/public/data/owid-covid-codebook.csv</a>.</p>
+<p>The variable date is class <em>factor</em> is converted to class <em>date</em>.</p>
+<pre class="r"><code>covid.df$date &lt;- as.Date(covid.df$date, format(&quot;%Y-%m-%d&quot;))</code></pre>
+</div>
+<div id="list-of-countries-of-the-data-set." class="section level4">
+<h4>List of countries of the data set.</h4>
+<pre class="r"><code>levels(covid.df$location)</code></pre>
+<pre><code>##   [1] &quot;Afghanistan&quot;                      &quot;Albania&quot;                         
+##   [3] &quot;Algeria&quot;                          &quot;Andorra&quot;                         
+##   [5] &quot;Angola&quot;                           &quot;Anguilla&quot;                        
+##   [7] &quot;Antigua and Barbuda&quot;              &quot;Argentina&quot;                       
+##   [9] &quot;Armenia&quot;                          &quot;Aruba&quot;                           
+##  [11] &quot;Australia&quot;                        &quot;Austria&quot;                         
+##  [13] &quot;Azerbaijan&quot;                       &quot;Bahamas&quot;                         
+##  [15] &quot;Bahrain&quot;                          &quot;Bangladesh&quot;                      
+##  [17] &quot;Barbados&quot;                         &quot;Belarus&quot;                         
+##  [19] &quot;Belgium&quot;                          &quot;Belize&quot;                          
+##  [21] &quot;Benin&quot;                            &quot;Bermuda&quot;                         
+##  [23] &quot;Bhutan&quot;                           &quot;Bolivia&quot;                         
+##  [25] &quot;Bonaire Sint Eustatius and Saba&quot;  &quot;Bosnia and Herzegovina&quot;          
+##  [27] &quot;Botswana&quot;                         &quot;Brazil&quot;                          
+##  [29] &quot;British Virgin Islands&quot;           &quot;Brunei&quot;                          
+##  [31] &quot;Bulgaria&quot;                         &quot;Burkina Faso&quot;                    
+##  [33] &quot;Burundi&quot;                          &quot;Cambodia&quot;                        
+##  [35] &quot;Cameroon&quot;                         &quot;Canada&quot;                          
+##  [37] &quot;Cape Verde&quot;                       &quot;Cayman Islands&quot;                  
+##  [39] &quot;Central African Republic&quot;         &quot;Chad&quot;                            
+##  [41] &quot;Chile&quot;                            &quot;China&quot;                           
+##  [43] &quot;Colombia&quot;                         &quot;Comoros&quot;                         
+##  [45] &quot;Congo&quot;                            &quot;Costa Rica&quot;                      
+##  [47] &quot;Cote d&#39;Ivoire&quot;                    &quot;Croatia&quot;                         
+##  [49] &quot;Cuba&quot;                             &quot;Curacao&quot;                         
+##  [51] &quot;Cyprus&quot;                           &quot;Czech Republic&quot;                  
+##  [53] &quot;Democratic Republic of Congo&quot;     &quot;Denmark&quot;                         
+##  [55] &quot;Djibouti&quot;                         &quot;Dominica&quot;                        
+##  [57] &quot;Dominican Republic&quot;               &quot;Ecuador&quot;                         
+##  [59] &quot;Egypt&quot;                            &quot;El Salvador&quot;                     
+##  [61] &quot;Equatorial Guinea&quot;                &quot;Eritrea&quot;                         
+##  [63] &quot;Estonia&quot;                          &quot;Ethiopia&quot;                        
+##  [65] &quot;Faeroe Islands&quot;                   &quot;Falkland Islands&quot;                
+##  [67] &quot;Fiji&quot;                             &quot;Finland&quot;                         
+##  [69] &quot;France&quot;                           &quot;French Polynesia&quot;                
+##  [71] &quot;Gabon&quot;                            &quot;Gambia&quot;                          
+##  [73] &quot;Georgia&quot;                          &quot;Germany&quot;                         
+##  [75] &quot;Ghana&quot;                            &quot;Gibraltar&quot;                       
+##  [77] &quot;Greece&quot;                           &quot;Greenland&quot;                       
+##  [79] &quot;Grenada&quot;                          &quot;Guam&quot;                            
+##  [81] &quot;Guatemala&quot;                        &quot;Guernsey&quot;                        
+##  [83] &quot;Guinea&quot;                           &quot;Guinea-Bissau&quot;                   
+##  [85] &quot;Guyana&quot;                           &quot;Haiti&quot;                           
+##  [87] &quot;Honduras&quot;                         &quot;Hong Kong&quot;                       
+##  [89] &quot;Hungary&quot;                          &quot;Iceland&quot;                         
+##  [91] &quot;India&quot;                            &quot;Indonesia&quot;                       
+##  [93] &quot;International&quot;                    &quot;Iran&quot;                            
+##  [95] &quot;Iraq&quot;                             &quot;Ireland&quot;                         
+##  [97] &quot;Isle of Man&quot;                      &quot;Israel&quot;                          
+##  [99] &quot;Italy&quot;                            &quot;Jamaica&quot;                         
+## [101] &quot;Japan&quot;                            &quot;Jersey&quot;                          
+## [103] &quot;Jordan&quot;                           &quot;Kazakhstan&quot;                      
+## [105] &quot;Kenya&quot;                            &quot;Kosovo&quot;                          
+## [107] &quot;Kuwait&quot;                           &quot;Kyrgyzstan&quot;                      
+## [109] &quot;Laos&quot;                             &quot;Latvia&quot;                          
+## [111] &quot;Lebanon&quot;                          &quot;Lesotho&quot;                         
+## [113] &quot;Liberia&quot;                          &quot;Libya&quot;                           
+## [115] &quot;Liechtenstein&quot;                    &quot;Lithuania&quot;                       
+## [117] &quot;Luxembourg&quot;                       &quot;Macedonia&quot;                       
+## [119] &quot;Madagascar&quot;                       &quot;Malawi&quot;                          
+## [121] &quot;Malaysia&quot;                         &quot;Maldives&quot;                        
+## [123] &quot;Mali&quot;                             &quot;Malta&quot;                           
+## [125] &quot;Mauritania&quot;                       &quot;Mauritius&quot;                       
+## [127] &quot;Mexico&quot;                           &quot;Moldova&quot;                         
+## [129] &quot;Monaco&quot;                           &quot;Mongolia&quot;                        
+## [131] &quot;Montenegro&quot;                       &quot;Montserrat&quot;                      
+## [133] &quot;Morocco&quot;                          &quot;Mozambique&quot;                      
+## [135] &quot;Myanmar&quot;                          &quot;Namibia&quot;                         
+## [137] &quot;Nepal&quot;                            &quot;Netherlands&quot;                     
+## [139] &quot;New Caledonia&quot;                    &quot;New Zealand&quot;                     
+## [141] &quot;Nicaragua&quot;                        &quot;Niger&quot;                           
+## [143] &quot;Nigeria&quot;                          &quot;Northern Mariana Islands&quot;        
+## [145] &quot;Norway&quot;                           &quot;Oman&quot;                            
+## [147] &quot;Pakistan&quot;                         &quot;Palestine&quot;                       
+## [149] &quot;Panama&quot;                           &quot;Papua New Guinea&quot;                
+## [151] &quot;Paraguay&quot;                         &quot;Peru&quot;                            
+## [153] &quot;Philippines&quot;                      &quot;Poland&quot;                          
+## [155] &quot;Portugal&quot;                         &quot;Puerto Rico&quot;                     
+## [157] &quot;Qatar&quot;                            &quot;Romania&quot;                         
+## [159] &quot;Russia&quot;                           &quot;Rwanda&quot;                          
+## [161] &quot;Saint Kitts and Nevis&quot;            &quot;Saint Lucia&quot;                     
+## [163] &quot;Saint Vincent and the Grenadines&quot; &quot;San Marino&quot;                      
+## [165] &quot;Sao Tome and Principe&quot;            &quot;Saudi Arabia&quot;                    
+## [167] &quot;Senegal&quot;                          &quot;Serbia&quot;                          
+## [169] &quot;Seychelles&quot;                       &quot;Sierra Leone&quot;                    
+## [171] &quot;Singapore&quot;                        &quot;Sint Maarten (Dutch part)&quot;       
+## [173] &quot;Slovakia&quot;                         &quot;Slovenia&quot;                        
+## [175] &quot;Somalia&quot;                          &quot;South Africa&quot;                    
+## [177] &quot;South Korea&quot;                      &quot;South Sudan&quot;                     
+## [179] &quot;Spain&quot;                            &quot;Sri Lanka&quot;                       
+## [181] &quot;Sudan&quot;                            &quot;Suriname&quot;                        
+## [183] &quot;Swaziland&quot;                        &quot;Sweden&quot;                          
+## [185] &quot;Switzerland&quot;                      &quot;Syria&quot;                           
+## [187] &quot;Taiwan&quot;                           &quot;Tajikistan&quot;                      
+## [189] &quot;Tanzania&quot;                         &quot;Thailand&quot;                        
+## [191] &quot;Timor&quot;                            &quot;Togo&quot;                            
+## [193] &quot;Trinidad and Tobago&quot;              &quot;Tunisia&quot;                         
+## [195] &quot;Turkey&quot;                           &quot;Turks and Caicos Islands&quot;        
+## [197] &quot;Uganda&quot;                           &quot;Ukraine&quot;                         
+## [199] &quot;United Arab Emirates&quot;             &quot;United Kingdom&quot;                  
+## [201] &quot;United States&quot;                    &quot;United States Virgin Islands&quot;    
+## [203] &quot;Uruguay&quot;                          &quot;Uzbekistan&quot;                      
+## [205] &quot;Vatican&quot;                          &quot;Venezuela&quot;                       
+## [207] &quot;Vietnam&quot;                          &quot;Western Sahara&quot;                  
+## [209] &quot;World&quot;                            &quot;Yemen&quot;                           
+## [211] &quot;Zambia&quot;                           &quot;Zimbabwe&quot;</code></pre>
+</div>
+<div id="list-of-continents-of-the-data-set." class="section level4">
+<h4>List of continents of the data set.</h4>
+<pre class="r"><code>levels(covid.df$continent)</code></pre>
+<pre><code>## [1] &quot;&quot;              &quot;Africa&quot;        &quot;Asia&quot;          &quot;Europe&quot;       
+## [5] &quot;North America&quot; &quot;Oceania&quot;       &quot;South America&quot;</code></pre>
+</div>
+<div id="máximum-number-of-days-that-the-data-set-comprises." class="section level4">
+<h4>Máximum number of days that the data set comprises.</h4>
+<pre class="r"><code>maxdays &lt;- max(table(covid.df$location))
+print(paste(&quot;Maximum reported days:&quot;,maxdays))</code></pre>
+<pre><code>## [1] &quot;Maximum reported days: 235&quot;</code></pre>
+</div>
+<div id="countries-reporting-data-of-the-maximum-days-of-the-data-set." class="section level4">
+<h4>Countries reporting data of the maximum days of the data set.</h4>
+<pre class="r"><code>names(table(covid.df$location)[table(covid.df$location)==maxdays])</code></pre>
+<pre><code>##  [1] &quot;Afghanistan&quot;          &quot;Algeria&quot;              &quot;Armenia&quot;             
+##  [4] &quot;Australia&quot;            &quot;Austria&quot;              &quot;Azerbaijan&quot;          
+##  [7] &quot;Bahrain&quot;              &quot;Belarus&quot;              &quot;Belgium&quot;             
+## [10] &quot;Brazil&quot;               &quot;Cambodia&quot;             &quot;Canada&quot;              
+## [13] &quot;China&quot;                &quot;Croatia&quot;              &quot;Czech Republic&quot;      
+## [16] &quot;Denmark&quot;              &quot;Dominican Republic&quot;   &quot;Ecuador&quot;             
+## [19] &quot;Egypt&quot;                &quot;Estonia&quot;              &quot;Finland&quot;             
+## [22] &quot;France&quot;               &quot;Georgia&quot;              &quot;Germany&quot;             
+## [25] &quot;Greece&quot;               &quot;Iceland&quot;              &quot;India&quot;               
+## [28] &quot;Indonesia&quot;            &quot;International&quot;        &quot;Iran&quot;                
+## [31] &quot;Iraq&quot;                 &quot;Ireland&quot;              &quot;Israel&quot;              
+## [34] &quot;Italy&quot;                &quot;Japan&quot;                &quot;Kuwait&quot;              
+## [37] &quot;Lebanon&quot;              &quot;Lithuania&quot;            &quot;Luxembourg&quot;          
+## [40] &quot;Macedonia&quot;            &quot;Malaysia&quot;             &quot;Mexico&quot;              
+## [43] &quot;Monaco&quot;               &quot;Nepal&quot;                &quot;Netherlands&quot;         
+## [46] &quot;New Zealand&quot;          &quot;Nigeria&quot;              &quot;Norway&quot;              
+## [49] &quot;Oman&quot;                 &quot;Pakistan&quot;             &quot;Philippines&quot;         
+## [52] &quot;Qatar&quot;                &quot;Romania&quot;              &quot;Russia&quot;              
+## [55] &quot;San Marino&quot;           &quot;Singapore&quot;            &quot;South Korea&quot;         
+## [58] &quot;Sri Lanka&quot;            &quot;Sweden&quot;               &quot;Switzerland&quot;         
+## [61] &quot;Taiwan&quot;               &quot;Thailand&quot;             &quot;United Arab Emirates&quot;
+## [64] &quot;United Kingdom&quot;       &quot;United States&quot;        &quot;Vietnam&quot;             
+## [67] &quot;World&quot;</code></pre>
+</div>
+<div id="start-and-end-dates-of-the-data-set." class="section level4">
+<h4>Start and end dates of the data set.</h4>
+<pre class="r"><code>startdate &lt;- min(covid.df$date)
+enddate &lt;- max(covid.df$date)
+todayformatted &lt;- format(Sys.Date(), &quot;%A, %B %d, %Y&quot;)
+todayformatted &lt;- paste(toupper(substr(todayformatted, 1, 1)), 
+                        substr(todayformatted, 2, nchar(todayformatted)), 
+                        sep=&quot;&quot;)
+print(paste(&quot;Starts:&quot;, format(startdate, &quot;%A, %B, %d of %Y&quot;), 
+            &quot;Ends:&quot;,  format(enddate, &quot;%A, %B, %d of %Y&quot;)))</code></pre>
+<pre><code>## [1] &quot;Starts: Tuesday, December, 31 of 2019 Ends: Friday, August, 21 of 2020&quot;</code></pre>
+</div>
+</div>
+<div id="rankings-of-countries-with-the-variables-of-totals" class="section level1">
+<h1>Rankings of countries with the variables of totals</h1>
+<p>From the original dataframe, only the rows where <em>date</em> is equal to the maximum date (or compilation date) are obtained. Using this filter only the updated totals or accumulated values of each country are obtained. Additionally, <strong><span style="     color: red !important;">countries with less than a million inhabitants are discarded</span></strong>. Some countries with small population have very high statistics per million of inhabitants.</p>
+<p>The rankings are created with the following variables:</p>
+<pre class="r"><code># Get one row of each country with the updated totals
+covid.total.df &lt;- covid.df[covid.df$date== enddate,]
+# Filter countries with less than 1 millón population
+covid.total.df &lt;- covid.total.df[covid.total.df$population &gt;= 1000000,]
+covid.total.df$location &lt;- droplevels.factor(covid.total.df$location)
+print(names(covid.total.df)[c(5,7,9,11)])</code></pre>
+<pre><code>## [1] &quot;total_cases&quot;             &quot;new_cases_smoothed&quot;     
+## [3] &quot;new_deaths&quot;              &quot;total_cases_per_million&quot;</code></pre>
+<p>After discarding the countries that have less than a million inhabitants, the data set now has: <strong>156 countries</strong>.</p>
+<p>For each of the variables with total values, the 20 countries with the highest and lowest values are obtained. If México is not included in the top or bottom 20 it is added to the list indicating its ranking position. For each variable to be analyzed, the following is done in R:</p>
+<ol style="list-style-type: decimal">
+<li>The data is ordered by the corresponding variable to be analyzed and stored in a new <em>dataframe</em>.</li>
+<li>In the new <em>dataframe</em> the information of the 20 countries with the highest values and the 20 countries with the lowest values are kept, the rest is discarded (row filtering).</li>
+<li>In the new <em>dataframe</em> only variables of interest are kept, the rest is discarded (column filtering). An additional column is created with the numeric ranking of each country.</li>
+<li>The data of the rankings is displayed as tables and bar graphs.</li>
+</ol>
+<div id="ranking-of-countries-by-total-cases-of-covid-19-with-column-total_cases" class="section level2 tabset tabset-fade">
+<h2>Ranking of countries by total cases of COVID-19 with column <em>total_cases</em></h2>
+<pre class="r"><code># Data is ordered according to the total_cases column
+ranking.total_cases &lt;- covid.total.df[order(-covid.total.df$total_cases),]
+# The row corresponding to World is removed
+ranking.total_cases &lt;- ranking.total_cases[ranking.total_cases$location != &quot;World&quot;, ]
+# A new column indicating the positionin the rank is added
+ranking.total_cases$position &lt;- 1:nrow(ranking.total_cases)
+# Only columns of interest are kept
+columnfilter &lt;- c(&quot;position&quot;, &quot;location&quot;, &quot;total_cases&quot;)
+bottom20.total_cases &lt;- tail(ranking.total_cases[, columnfilter],20)
+top20.total_cases &lt;- head(ranking.total_cases[, columnfilter],20)
+rm(ranking.total_cases)
+rownames(top20.total_cases) &lt;- c()
+rownames(bottom20.total_cases) &lt;- c()
+
+mexrow &lt;- which(top20.total_cases$location==&#39;Mexico&#39;)
+top20.total_cases$total_cases_formated &lt;- formatC(top20.total_cases$total_cases, 
+                                                  format=&quot;f&quot;, big.mark=&quot;,&quot;, digits=0)
+bottom20.total_cases$total_cases_formated &lt;- formatC(bottom20.total_cases$total_cases, 
+                                                     format=&quot;f&quot;, big.mark=&quot;,&quot;, digits=0)</code></pre>
+<div id="tables" class="section level3">
+<h3>Tables</h3>
+<pre class="r"><code>tablecolnames &lt;- c(&quot;Position&quot;, &quot;Country&quot;, &quot;Total cases&quot;)
+kable(top20.total_cases[,c(1,2,4)], format = &quot;html&quot;, align = &quot;clr&quot;, 
+      col.names=tablecolnames, caption=&quot;Countries with most cases&quot;) %&gt;% 
+  kable_styling(bootstrap_options = c(&quot;striped&quot;, &quot;hover&quot;, &quot;condensed&quot;, &quot;responsive&quot;), 
+                full_width = F, position = &quot;float_left&quot;) %&gt;%
+  row_spec(mexrow, bold = T, color = &quot;black&quot;, background = &quot;yellow&quot;)
+
+kable(bottom20.total_cases[,c(1,2,4)], format = &quot;html&quot;, align = &quot;clr&quot;, 
+      col.names=tablecolnames, caption=&quot;Countries with least cases&quot;) %&gt;% 
+  kable_styling(bootstrap_options = c(&quot;striped&quot;, &quot;hover&quot;, &quot;condensed&quot;, &quot;responsive&quot;), 
+                full_width = F, position = &quot;right&quot;)</code></pre>
+<table class="table table-striped table-hover table-condensed table-responsive" style="width: auto !important; float: left; margin-right: 10px;">
+<caption>
+Countries with most cases
+</caption>
+<thead>
+<tr>
+<th style="text-align:center;">
+Position
+</th>
+<th style="text-align:left;">
+Country
+</th>
+<th style="text-align:right;">
+Total cases
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:left;">
+United States
+</td>
+<td style="text-align:right;">
+5,573,847
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:left;">
+Brazil
+</td>
+<td style="text-align:right;">
+3,501,975
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+3
+</td>
+<td style="text-align:left;">
+India
+</td>
+<td style="text-align:right;">
+2,905,823
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+4
+</td>
+<td style="text-align:left;">
+Russia
+</td>
+<td style="text-align:right;">
+942,106
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+5
+</td>
+<td style="text-align:left;">
+South Africa
+</td>
+<td style="text-align:right;">
+599,940
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+6
+</td>
+<td style="text-align:left;">
+Peru
+</td>
+<td style="text-align:right;">
+567,059
+</td>
+</tr>
+<tr>
+<td style="text-align:center;font-weight: bold;color: black !important;background-color: yellow !important;">
+7
+</td>
+<td style="text-align:left;font-weight: bold;color: black !important;background-color: yellow !important;">
+Mexico
+</td>
+<td style="text-align:right;font-weight: bold;color: black !important;background-color: yellow !important;">
+543,806
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+8
+</td>
+<td style="text-align:left;">
+Colombia
+</td>
+<td style="text-align:right;">
+513,719
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+9
+</td>
+<td style="text-align:left;">
+Chile
+</td>
+<td style="text-align:right;">
+391,849
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+10
+</td>
+<td style="text-align:left;">
+Iran
+</td>
+<td style="text-align:right;">
+352,558
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+11
+</td>
+<td style="text-align:left;">
+United Kingdom
+</td>
+<td style="text-align:right;">
+322,280
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+12
+</td>
+<td style="text-align:left;">
+Argentina
+</td>
+<td style="text-align:right;">
+312,646
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+13
+</td>
+<td style="text-align:left;">
+Saudi Arabia
+</td>
+<td style="text-align:right;">
+303,973
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+14
+</td>
+<td style="text-align:left;">
+Pakistan
+</td>
+<td style="text-align:right;">
+291,588
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+15
+</td>
+<td style="text-align:left;">
+Bangladesh
+</td>
+<td style="text-align:right;">
+287,959
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+16
+</td>
+<td style="text-align:left;">
+Italy
+</td>
+<td style="text-align:right;">
+256,118
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+17
+</td>
+<td style="text-align:left;">
+Turkey
+</td>
+<td style="text-align:right;">
+254,520
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+18
+</td>
+<td style="text-align:left;">
+France
+</td>
+<td style="text-align:right;">
+229,814
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+19
+</td>
+<td style="text-align:left;">
+Germany
+</td>
+<td style="text-align:right;">
+228,621
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+20
+</td>
+<td style="text-align:left;">
+Iraq
+</td>
+<td style="text-align:right;">
+192,797
+</td>
+</tr>
+</tbody>
+</table>
+<table class="table table-striped table-hover table-condensed table-responsive" style="width: auto !important; margin-right: 0; margin-left: auto">
+<caption>
+Countries with least cases
+</caption>
+<thead>
+<tr>
+<th style="text-align:center;">
+Position
+</th>
+<th style="text-align:left;">
+Country
+</th>
+<th style="text-align:right;">
+Total cases
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center;">
+137
+</td>
+<td style="text-align:left;">
+Jamaica
+</td>
+<td style="text-align:right;">
+1,290
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+138
+</td>
+<td style="text-align:left;">
+Liberia
+</td>
+<td style="text-align:right;">
+1,284
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+139
+</td>
+<td style="text-align:left;">
+Togo
+</td>
+<td style="text-align:right;">
+1,212
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+140
+</td>
+<td style="text-align:left;">
+Niger
+</td>
+<td style="text-align:right;">
+1,169
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+141
+</td>
+<td style="text-align:left;">
+Vietnam
+</td>
+<td style="text-align:right;">
+1,007
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+142
+</td>
+<td style="text-align:left;">
+Lesotho
+</td>
+<td style="text-align:right;">
+996
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+143
+</td>
+<td style="text-align:left;">
+Chad
+</td>
+<td style="text-align:right;">
+972
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+144
+</td>
+<td style="text-align:left;">
+Trinidad and Tobago
+</td>
+<td style="text-align:right;">
+767
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+145
+</td>
+<td style="text-align:left;">
+Tanzania
+</td>
+<td style="text-align:right;">
+509
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+146
+</td>
+<td style="text-align:left;">
+Taiwan
+</td>
+<td style="text-align:right;">
+486
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+147
+</td>
+<td style="text-align:left;">
+Burundi
+</td>
+<td style="text-align:right;">
+422
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+148
+</td>
+<td style="text-align:left;">
+Myanmar
+</td>
+<td style="text-align:right;">
+409
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+149
+</td>
+<td style="text-align:left;">
+Papua New Guinea
+</td>
+<td style="text-align:right;">
+361
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+150
+</td>
+<td style="text-align:left;">
+Mauritius
+</td>
+<td style="text-align:right;">
+346
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+151
+</td>
+<td style="text-align:left;">
+Eritrea
+</td>
+<td style="text-align:right;">
+304
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+152
+</td>
+<td style="text-align:left;">
+Mongolia
+</td>
+<td style="text-align:right;">
+298
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+153
+</td>
+<td style="text-align:left;">
+Cambodia
+</td>
+<td style="text-align:right;">
+273
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+154
+</td>
+<td style="text-align:left;">
+Timor
+</td>
+<td style="text-align:right;">
+26
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+155
+</td>
+<td style="text-align:left;">
+Laos
+</td>
+<td style="text-align:right;">
+20
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+156
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="top-20-graph" class="section level3">
+<h3>Top 20 graph</h3>
+<div>
+<pre class="r"><code>ggplot(data=top20.total_cases, aes(x=reorder(paste(position, location),total_cases), 
+                                   y=total_cases, fill=location))+
+  geom_bar(stat = &quot;identity&quot;, position=position_dodge(), colour=&quot;black&quot;, show.legend = FALSE)+
+  ylab(&quot;Total cases of COVID-19&quot;) +
+  geom_text(aes(y=max(total_cases)+170000, 
+                label=total_cases_formated,
+                fontface=&quot;bold&quot;), 
+            color=&quot;black&quot;)+
+  labs(title=&quot;Top 20 countries with most cases of  COVID-19&quot;, 
+       subtitle = todayformatted,
+       caption = plotscaption)+
+  scale_y_continuous(breaks=c(100000, 500000, 750000, 1000000, 2000000, 3000000, 4000000, 5000000),
+                     label=c(&quot;100k&quot;, &quot;500k&quot;, &quot;750k&quot;, &quot;1m&quot;, &quot;2m&quot;, &quot;3m&quot;, &quot;4m&quot;, &quot;5m&quot;))+
+  coord_flip() +
+  xlab(&quot;Countries&quot;) +
+  theme_bw()+
+  theme(title = element_text(size=14, face=&quot;bold&quot;, colour = &quot;black&quot;),
+        axis.text.y = element_text(size=11, face=&quot;bold&quot;, colour = &quot;black&quot;),
+        axis.text.x = element_text(size=11, face=&quot;bold&quot;, colour = &quot;black&quot;))</code></pre>
+<img src="notebook_covid19_eng_files/figure-html/Bar%20plot%20of%20total_cases-1.png" width="1440" class=img-zoomable />
+</div>
+</div>
+</div>
+<div id="section" class="section level2 unlisted unnumbered">
+<h2></h2>
+<div id="ranking-of-countries-by-total-cases-of-covid-19-with-column-total_cases---american-countries" class="section level3 tabset tabset-fade">
+<h3>Ranking of countries by total cases of COVID-19 with column <em>total_cases</em> - <strong>American countries</strong></h3>
+<p>This ranking is done with American countries only. The data is obtained by filtering the rows where the <em>continent</em> variable is either “North America” or “South America”.</p>
+<pre class="r"><code>ranking.total_cases.america &lt;- covid.total.df[covid.total.df$continent %in% 
+                                                c(&quot;North America&quot;, &quot;South America&quot;) ,]
+ranking.total_cases.america &lt;- ranking.total_cases.america[order(-ranking.total_cases.america$total_cases),]
+ranking.total_cases.america$position &lt;- 1:nrow(ranking.total_cases.america)
+bottom20.total_cases.america &lt;- tail(ranking.total_cases.america[, c(&quot;position&quot;, &quot;location&quot;, &quot;total_cases&quot;)],5)
+top20.total_cases.america &lt;- head(ranking.total_cases.america[, c(&quot;position&quot;, &quot;location&quot;, &quot;total_cases&quot;)],20)
+rownames(bottom20.total_cases.america) &lt;- c()
+rownames(top20.total_cases.america) &lt;- c()
+mexrow &lt;- which(ranking.total_cases.america$location==&#39;Mexico&#39;)
+rm(ranking.total_cases.america)
+top20.total_cases.america$total_cases_formated &lt;- formatC(top20.total_cases.america$total_cases,
+                                                          format=&quot;f&quot;, big.mark=&quot;,&quot;, digits=0)
+bottom20.total_cases.america$total_cases_formated &lt;- formatC(bottom20.total_cases.america$total_cases, 
+                                                             format=&quot;f&quot;, big.mark=&quot;,&quot;, digits=0)</code></pre>
+<div id="table" class="section level4">
+<h4>Table</h4>
+<pre class="r"><code>tablecolnames &lt;- c(&quot;Position&quot;, &quot;Country&quot;, &quot;Total cases&quot;)
+kable(top20.total_cases.america[,c(1,2,4)], format = &quot;html&quot;, align = &quot;clr&quot;, 
+      col.names=tablecolnames, caption=&quot;Countries of the American Continent with most cases&quot;) %&gt;%
+  kable_styling(bootstrap_options = c(&quot;striped&quot;, &quot;hover&quot;, &quot;condensed&quot;, &quot;responsive&quot;), 
+                full_width = F, position = &quot;center&quot;) %&gt;%
+row_spec(mexrow, bold = T, color = &quot;black&quot;, background = &quot;yellow&quot;)</code></pre>
+<table class="table table-striped table-hover table-condensed table-responsive" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<caption>
+Countries of the American Continent with most cases
+</caption>
+<thead>
+<tr>
+<th style="text-align:center;">
+Position
+</th>
+<th style="text-align:left;">
+Country
+</th>
+<th style="text-align:right;">
+Total cases
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:left;">
+United States
+</td>
+<td style="text-align:right;">
+5,573,847
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:left;">
+Brazil
+</td>
+<td style="text-align:right;">
+3,501,975
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+3
+</td>
+<td style="text-align:left;">
+Peru
+</td>
+<td style="text-align:right;">
+567,059
+</td>
+</tr>
+<tr>
+<td style="text-align:center;font-weight: bold;color: black !important;background-color: yellow !important;">
+4
+</td>
+<td style="text-align:left;font-weight: bold;color: black !important;background-color: yellow !important;">
+Mexico
+</td>
+<td style="text-align:right;font-weight: bold;color: black !important;background-color: yellow !important;">
+543,806
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+5
+</td>
+<td style="text-align:left;">
+Colombia
+</td>
+<td style="text-align:right;">
+513,719
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+6
+</td>
+<td style="text-align:left;">
+Chile
+</td>
+<td style="text-align:right;">
+391,849
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+7
+</td>
+<td style="text-align:left;">
+Argentina
+</td>
+<td style="text-align:right;">
+312,646
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+8
+</td>
+<td style="text-align:left;">
+Canada
+</td>
+<td style="text-align:right;">
+123,873
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+9
+</td>
+<td style="text-align:left;">
+Bolivia
+</td>
+<td style="text-align:right;">
+106,065
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+10
+</td>
+<td style="text-align:left;">
+Ecuador
+</td>
+<td style="text-align:right;">
+105,508
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+11
+</td>
+<td style="text-align:left;">
+Dominican Republic
+</td>
+<td style="text-align:right;">
+89,010
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+12
+</td>
+<td style="text-align:left;">
+Panama
+</td>
+<td style="text-align:right;">
+83,855
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+13
+</td>
+<td style="text-align:left;">
+Guatemala
+</td>
+<td style="text-align:right;">
+65,983
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+14
+</td>
+<td style="text-align:left;">
+Honduras
+</td>
+<td style="text-align:right;">
+52,819
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+15
+</td>
+<td style="text-align:left;">
+Venezuela
+</td>
+<td style="text-align:right;">
+37,567
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+16
+</td>
+<td style="text-align:left;">
+Costa Rica
+</td>
+<td style="text-align:right;">
+31,075
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+17
+</td>
+<td style="text-align:left;">
+Puerto Rico
+</td>
+<td style="text-align:right;">
+28,143
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+18
+</td>
+<td style="text-align:left;">
+El Salvador
+</td>
+<td style="text-align:right;">
+23,964
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+19
+</td>
+<td style="text-align:left;">
+Paraguay
+</td>
+<td style="text-align:right;">
+11,817
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+20
+</td>
+<td style="text-align:left;">
+Haiti
+</td>
+<td style="text-align:right;">
+7,997
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="top-20-graph-1" class="section level4">
+<h4>Top 20 graph</h4>
+<div>
+<pre class="r"><code>ggplot(data=top20.total_cases.america, aes(x=reorder(paste(position, location),total_cases),
+                                           y=total_cases, fill=location))+
+  geom_bar(stat = &quot;identity&quot;, position=position_dodge(), colour=&quot;black&quot;, show.legend = FALSE)+
+  ylab(&quot;Total cases of COVID-19&quot;) +
+  geom_text(aes(y=max(total_cases)+170000, 
+                label=format(total_cases, big.mark=&quot;,&quot;),
+                fontface=&quot;bold&quot;), 
+            color=&quot;black&quot;)+
+  labs(title=&quot;Top 20 of American countries with most cases of COVID-19&quot;, 
+       subtitle = todayformatted,
+       caption = plotscaption)+
+  scale_y_continuous(breaks=c(100000, 250000, 500000, 750000, 1000000, 2000000, 3000000, 4000000, 5000000),
+                     label=c(&quot;100k&quot;, &quot;250k&quot;, &quot;500k&quot;, &quot;750k&quot;, &quot;1m&quot;, &quot;2m&quot;, &quot;3m&quot;, &quot;4m&quot;, &quot;5m&quot;))+
+  coord_flip() +
+  xlab(&quot;Countries&quot;) +
+  theme_bw()+
+  theme(title = element_text(size=14, face=&quot;bold&quot;, colour = &quot;black&quot;),
+        axis.text.y = element_text(size=11, face=&quot;bold&quot;, colour = &quot;black&quot;),
+        axis.text.x = element_text(size=11, face=&quot;bold&quot;, colour = &quot;black&quot;))</code></pre>
+<img src="notebook_covid19_eng_files/figure-html/Bar%20plot%20of%20total_cases%20using%20American%20countries-1.png" width="1440" class=img-zoomable />
+</div>
+</div>
+</div>
+</div>
+<div id="ranking-of-countries-by-total-cases-of-covid-19-per-million-inhabitants-with-column-total_cases_per_million" class="section level2 tabset tabset-fade">
+<h2>Ranking of countries by total cases of COVID-19 per million inhabitants with column <em>total_cases_per_million</em></h2>
+<pre class="r"><code>ranking.total_cases_per_million &lt;- covid.total.df[order(-covid.total.df$total_cases_per_million),]
+ranking.total_cases_per_million$position &lt;- 1:nrow(ranking.total_cases_per_million)
+columnfilter &lt;- c(&quot;position&quot;, &quot;location&quot;, &quot;total_cases_per_million&quot;)
+mexico.total_cases_per_million &lt;- ranking.total_cases_per_million[
+                                  ranking.total_cases_per_million$location == &quot;Mexico&quot;, ]
+bottom20.total_cases_per_million &lt;- tail(ranking.total_cases_per_million[, columnfilter],20)
+top20.total_cases_per_million &lt;- head(ranking.total_cases_per_million[, columnfilter],20)
+mexico.total_cases_per_million &lt;- mexico.total_cases_per_million[, columnfilter]
+rm(ranking.total_cases_per_million)
+rownames(top20.total_cases_per_million) &lt;- c()
+rownames(bottom20.total_cases_per_million) &lt;- c()
+rownames(mexico.total_cases_per_million) &lt;- c()
+
+top20.total_cases_per_million &lt;- rbind(top20.total_cases_per_million, mexico.total_cases_per_million)
+mexrow &lt;- which(top20.total_cases_per_million$location==&#39;Mexico&#39;)
+
+top20.total_cases_per_million$total_cases_per_million_formated &lt;- formatC(
+  top20.total_cases_per_million$total_cases_per_million, format=&quot;f&quot;, big.mark=&quot;,&quot;, digits=2)
+bottom20.total_cases_per_million$total_cases_per_million_formated&lt;- formatC(
+  bottom20.total_cases_per_million$total_cases_per_million, format=&quot;f&quot;, big.mark=&quot;,&quot;, digits=2)</code></pre>
+<div id="tables-1" class="section level3">
+<h3>Tables</h3>
+<div class = "row">
+
+<pre class="r"><code>tablecolnames &lt;- c(&quot;Position&quot;, &quot;country&quot;, &quot;Cases pmi&quot;)
+kable(top20.total_cases_per_million[,c(1,2,4)], format = &quot;html&quot;, align = &quot;clr&quot;, 
+      col.names=tablecolnames, caption=&quot;Countries with most cases per million inhabitants (pmi)&quot;) %&gt;% 
+  kable_styling(bootstrap_options = c(&quot;striped&quot;, &quot;hover&quot;, &quot;condensed&quot;, &quot;responsive&quot;), 
+                full_width = F, position = &quot;float_left&quot;) %&gt;%
+  row_spec(mexrow, bold = T, color = &quot;black&quot;, background = &quot;yellow&quot;)
+
+kable(bottom20.total_cases_per_million[,c(1,2,4)], format = &quot;html&quot;, align = &quot;clr&quot;, 
+      col.names=tablecolnames, caption=&quot;Countries with least cases per million inhabitants (pmi)&quot;) %&gt;% 
+  kable_styling(bootstrap_options = c(&quot;striped&quot;, &quot;hover&quot;, &quot;condensed&quot;, &quot;responsive&quot;), 
+                full_width = F, position = &quot;right&quot;)</code></pre>
+<table class="table table-striped table-hover table-condensed table-responsive" style="width: auto !important; float: left; margin-right: 10px;">
+<caption>
+Countries with most cases per million inhabitants (pmi)
+</caption>
+<thead>
+<tr>
+<th style="text-align:center;">
+Position
+</th>
+<th style="text-align:left;">
+country
+</th>
+<th style="text-align:right;">
+Cases pmi
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:left;">
+Qatar
+</td>
+<td style="text-align:right;">
+40,583.67
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:left;">
+Bahrain
+</td>
+<td style="text-align:right;">
+28,179.64
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+3
+</td>
+<td style="text-align:left;">
+Chile
+</td>
+<td style="text-align:right;">
+20,498.26
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+4
+</td>
+<td style="text-align:left;">
+Panama
+</td>
+<td style="text-align:right;">
+19,434.42
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+5
+</td>
+<td style="text-align:left;">
+Kuwait
+</td>
+<td style="text-align:right;">
+18,444.17
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+6
+</td>
+<td style="text-align:left;">
+Peru
+</td>
+<td style="text-align:right;">
+17,198.28
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+7
+</td>
+<td style="text-align:left;">
+United States
+</td>
+<td style="text-align:right;">
+16,839.28
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+8
+</td>
+<td style="text-align:left;">
+Brazil
+</td>
+<td style="text-align:right;">
+16,475.28
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+9
+</td>
+<td style="text-align:left;">
+Oman
+</td>
+<td style="text-align:right;">
+16,403.99
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+10
+</td>
+<td style="text-align:left;">
+Armenia
+</td>
+<td style="text-align:right;">
+14,281.36
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+11
+</td>
+<td style="text-align:left;">
+Israel
+</td>
+<td style="text-align:right;">
+11,506.96
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+12
+</td>
+<td style="text-align:left;">
+South Africa
+</td>
+<td style="text-align:right;">
+10,115.55
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+13
+</td>
+<td style="text-align:left;">
+Colombia
+</td>
+<td style="text-align:right;">
+10,096.11
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+14
+</td>
+<td style="text-align:left;">
+Puerto Rico
+</td>
+<td style="text-align:right;">
+9,837.32
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+15
+</td>
+<td style="text-align:left;">
+Singapore
+</td>
+<td style="text-align:right;">
+9,589.01
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+16
+</td>
+<td style="text-align:left;">
+Bolivia
+</td>
+<td style="text-align:right;">
+9,086.33
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+17
+</td>
+<td style="text-align:left;">
+Saudi Arabia
+</td>
+<td style="text-align:right;">
+8,731.38
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+18
+</td>
+<td style="text-align:left;">
+Sweden
+</td>
+<td style="text-align:right;">
+8,496.65
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+19
+</td>
+<td style="text-align:left;">
+Dominican Republic
+</td>
+<td style="text-align:right;">
+8,205.27
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+20
+</td>
+<td style="text-align:left;">
+Moldova
+</td>
+<td style="text-align:right;">
+7,917.03
+</td>
+</tr>
+<tr>
+<td style="text-align:center;font-weight: bold;color: black !important;background-color: yellow !important;">
+42
+</td>
+<td style="text-align:left;font-weight: bold;color: black !important;background-color: yellow !important;">
+Mexico
+</td>
+<td style="text-align:right;font-weight: bold;color: black !important;background-color: yellow !important;">
+4,217.75
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+</tr>
+</tbody>
+</table>
+<table class="table table-striped table-hover table-condensed table-responsive" style="width: auto !important; margin-right: 0; margin-left: auto">
+<caption>
+Countries with least cases per million inhabitants (pmi)
+</caption>
+<thead>
+<tr>
+<th style="text-align:center;">
+Position
+</th>
+<th style="text-align:left;">
+country
+</th>
+<th style="text-align:right;">
+Cases pmi
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center;">
+138
+</td>
+<td style="text-align:left;">
+Mongolia
+</td>
+<td style="text-align:right;">
+90.90
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+139
+</td>
+<td style="text-align:left;">
+Eritrea
+</td>
+<td style="text-align:right;">
+85.72
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+140
+</td>
+<td style="text-align:left;">
+Yemen
+</td>
+<td style="text-align:right;">
+63.67
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+141
+</td>
+<td style="text-align:left;">
+China
+</td>
+<td style="text-align:right;">
+62.23
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+142
+</td>
+<td style="text-align:left;">
+Burkina Faso
+</td>
+<td style="text-align:right;">
+62.05
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+143
+</td>
+<td style="text-align:left;">
+Angola
+</td>
+<td style="text-align:right;">
+61.31
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+144
+</td>
+<td style="text-align:left;">
+Chad
+</td>
+<td style="text-align:right;">
+59.17
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+145
+</td>
+<td style="text-align:left;">
+Thailand
+</td>
+<td style="text-align:right;">
+48.57
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+146
+</td>
+<td style="text-align:left;">
+Niger
+</td>
+<td style="text-align:right;">
+48.29
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+147
+</td>
+<td style="text-align:left;">
+Papua New Guinea
+</td>
+<td style="text-align:right;">
+40.35
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+148
+</td>
+<td style="text-align:left;">
+Uganda
+</td>
+<td style="text-align:right;">
+38.26
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+149
+</td>
+<td style="text-align:left;">
+Burundi
+</td>
+<td style="text-align:right;">
+35.49
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+150
+</td>
+<td style="text-align:left;">
+Taiwan
+</td>
+<td style="text-align:right;">
+20.41
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+151
+</td>
+<td style="text-align:left;">
+Timor
+</td>
+<td style="text-align:right;">
+19.72
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+152
+</td>
+<td style="text-align:left;">
+Cambodia
+</td>
+<td style="text-align:right;">
+16.33
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+153
+</td>
+<td style="text-align:left;">
+Vietnam
+</td>
+<td style="text-align:right;">
+10.35
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+154
+</td>
+<td style="text-align:left;">
+Tanzania
+</td>
+<td style="text-align:right;">
+8.52
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+155
+</td>
+<td style="text-align:left;">
+Myanmar
+</td>
+<td style="text-align:right;">
+7.52
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+156
+</td>
+<td style="text-align:left;">
+Laos
+</td>
+<td style="text-align:right;">
+2.75
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+157
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="top-20-graph-2" class="section level3">
+<h3>Top 20 graph</h3>
+<div>
+<pre class="r"><code>ggplot(data=top20.total_cases_per_million, 
+       aes(x=reorder(paste(position, location),total_cases_per_million), 
+           y=total_cases_per_million, fill=location))+
+  geom_bar(stat = &quot;identity&quot;, position=position_dodge(), colour=&quot;black&quot;, show.legend = FALSE)+
+  ylab(&quot;Total cases of COVID-19 per million inhabitants&quot;) +
+  geom_text(aes(y=max(total_cases_per_million)+1250, 
+                label=total_cases_per_million_formated,
+                fontface=&quot;bold&quot;), 
+            color=&quot;black&quot;)+
+  labs(title=&quot;Top 20 of countries with most cases of COVID-19 per million inhabitants (+ México)&quot;,
+       subtitle = todayformatted,
+       caption = plotscaption)+
+  coord_flip() +
+  xlab(&quot;Countries&quot;) +
+  theme_bw()+
+  theme(title = element_text(size=14, face=&quot;bold&quot;, colour = &quot;black&quot;),
+        axis.text.y = element_text(size=11, face=&quot;bold&quot;, colour = &quot;black&quot;),
+        axis.text.x = element_text(size=11, face=&quot;bold&quot;, colour = &quot;black&quot;))</code></pre>
+<pre><code>## Warning: Removed 1 rows containing missing values (geom_bar).</code></pre>
+<pre><code>## Warning: Removed 22 rows containing missing values (geom_text).</code></pre>
+<img src="notebook_covid19_eng_files/figure-html/Bar%20plot%20of%20total_cases_per_million-1.png" width="1440" class=img-zoomable />
+</div>
+</div>
+</div>
+<div id="ranking-of-countries-by-total-deaths-from-covid-19-with-the-variable-total_deaths" class="section level2 tabset tabset-fade">
+<h2>Ranking of countries by total deaths from COVID-19 with the variable <em>total_deaths</em></h2>
+<pre class="r"><code>ranking.total_deaths &lt;- covid.total.df[order(-covid.total.df$total_deaths),]
+ranking.total_deaths &lt;- ranking.total_deaths[ranking.total_deaths$location != &quot;World&quot;, ]
+ranking.total_deaths$position &lt;- 1:nrow(ranking.total_deaths)
+columnfilter &lt;- c(&quot;position&quot;, &quot;location&quot;, &quot;total_deaths&quot;)
+bottom20.total_deaths &lt;- tail(ranking.total_deaths[, columnfilter],20)
+top20.total_deaths &lt;- head(ranking.total_deaths[, columnfilter],20)
+mexrow &lt;- which(ranking.total_deaths$location==&#39;Mexico&#39;)
+rm(ranking.total_deaths)
+rownames(top20.total_deaths) &lt;- c()
+rownames(bottom20.total_deaths) &lt;- c()
+
+top20.total_deaths$total_deaths_formated &lt;- formatC(top20.total_deaths$total_deaths, 
+                                                  format=&quot;f&quot;, big.mark=&quot;,&quot;, digits=0)
+bottom20.total_deaths$total_deaths_formated &lt;- formatC(bottom20.total_deaths$total_deaths, 
+                                                     format=&quot;f&quot;, big.mark=&quot;,&quot;, digits=0)</code></pre>
+<div id="tables-2" class="section level3">
+<h3>Tables</h3>
+<pre class="r"><code>tablecolnames &lt;- c(&quot;Position&quot;, &quot;Country&quot;, &quot;Total deaths&quot;)
+kable(top20.total_deaths[,c(1,2,4)], format = &quot;html&quot;, align = &quot;clr&quot;, 
+      col.names=tablecolnames, caption=&quot;Countries with most deaths from COVID-19&quot;) %&gt;% 
+  kable_styling(bootstrap_options = c(&quot;striped&quot;, &quot;hover&quot;, &quot;condensed&quot;, &quot;responsive&quot;), 
+                full_width = F, position = &quot;float_left&quot;) %&gt;%
+  row_spec(mexrow, bold = T, color = &quot;black&quot;, background = &quot;yellow&quot;)
+
+kable(bottom20.total_deaths[,c(1,2,4)], format = &quot;html&quot;, align = &quot;clr&quot;, 
+      col.names=tablecolnames, caption=&quot;Countries with least deaths from COVID-19&quot;) %&gt;% 
+  kable_styling(bootstrap_options = c(&quot;striped&quot;, &quot;hover&quot;, &quot;condensed&quot;, &quot;responsive&quot;), 
+                full_width = F, position = &quot;right&quot;)</code></pre>
+<table class="table table-striped table-hover table-condensed table-responsive" style="width: auto !important; float: left; margin-right: 10px;">
+<caption>
+Countries with most deaths from COVID-19
+</caption>
+<thead>
+<tr>
+<th style="text-align:center;">
+Position
+</th>
+<th style="text-align:left;">
+Country
+</th>
+<th style="text-align:right;">
+Total deaths
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:left;">
+United States
+</td>
+<td style="text-align:right;">
+174,255
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:left;">
+Brazil
+</td>
+<td style="text-align:right;">
+112,304
+</td>
+</tr>
+<tr>
+<td style="text-align:center;font-weight: bold;color: black !important;background-color: yellow !important;">
+3
+</td>
+<td style="text-align:left;font-weight: bold;color: black !important;background-color: yellow !important;">
+Mexico
+</td>
+<td style="text-align:right;font-weight: bold;color: black !important;background-color: yellow !important;">
+59,106
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+4
+</td>
+<td style="text-align:left;">
+India
+</td>
+<td style="text-align:right;">
+54,849
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+5
+</td>
+<td style="text-align:left;">
+United Kingdom
+</td>
+<td style="text-align:right;">
+41,403
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+6
+</td>
+<td style="text-align:left;">
+Italy
+</td>
+<td style="text-align:right;">
+35,418
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+7
+</td>
+<td style="text-align:left;">
+France
+</td>
+<td style="text-align:right;">
+30,480
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+8
+</td>
+<td style="text-align:left;">
+Peru
+</td>
+<td style="text-align:right;">
+27,034
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+9
+</td>
+<td style="text-align:left;">
+Iran
+</td>
+<td style="text-align:right;">
+20,264
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+10
+</td>
+<td style="text-align:left;">
+Colombia
+</td>
+<td style="text-align:right;">
+16,183
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+11
+</td>
+<td style="text-align:left;">
+Russia
+</td>
+<td style="text-align:right;">
+16,099
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+12
+</td>
+<td style="text-align:left;">
+South Africa
+</td>
+<td style="text-align:right;">
+12,618
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+13
+</td>
+<td style="text-align:left;">
+Chile
+</td>
+<td style="text-align:right;">
+10,671
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+14
+</td>
+<td style="text-align:left;">
+Belgium
+</td>
+<td style="text-align:right;">
+9,976
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+15
+</td>
+<td style="text-align:left;">
+Germany
+</td>
+<td style="text-align:right;">
+9,253
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+16
+</td>
+<td style="text-align:left;">
+Canada
+</td>
+<td style="text-align:right;">
+9,054
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+17
+</td>
+<td style="text-align:left;">
+Indonesia
+</td>
+<td style="text-align:right;">
+6,418
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+18
+</td>
+<td style="text-align:left;">
+Argentina
+</td>
+<td style="text-align:right;">
+6,406
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+19
+</td>
+<td style="text-align:left;">
+Pakistan
+</td>
+<td style="text-align:right;">
+6,219
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+20
+</td>
+<td style="text-align:left;">
+Iraq
+</td>
+<td style="text-align:right;">
+6,208
+</td>
+</tr>
+</tbody>
+</table>
+<table class="table table-striped table-hover table-condensed table-responsive" style="width: auto !important; margin-right: 0; margin-left: auto">
+<caption>
+Countries with least deaths from COVID-19
+</caption>
+<thead>
+<tr>
+<th style="text-align:center;">
+Position
+</th>
+<th style="text-align:left;">
+Country
+</th>
+<th style="text-align:right;">
+Total deaths
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center;">
+137
+</td>
+<td style="text-align:left;">
+Mozambique
+</td>
+<td style="text-align:right;">
+20
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+138
+</td>
+<td style="text-align:left;">
+Uganda
+</td>
+<td style="text-align:right;">
+19
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+139
+</td>
+<td style="text-align:left;">
+Georgia
+</td>
+<td style="text-align:right;">
+17
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+140
+</td>
+<td style="text-align:left;">
+Jamaica
+</td>
+<td style="text-align:right;">
+15
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+141
+</td>
+<td style="text-align:left;">
+Trinidad and Tobago
+</td>
+<td style="text-align:right;">
+12
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+142
+</td>
+<td style="text-align:left;">
+Jordan
+</td>
+<td style="text-align:right;">
+11
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+143
+</td>
+<td style="text-align:left;">
+Sri Lanka
+</td>
+<td style="text-align:right;">
+11
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+144
+</td>
+<td style="text-align:left;">
+Rwanda
+</td>
+<td style="text-align:right;">
+11
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+145
+</td>
+<td style="text-align:left;">
+Mauritius
+</td>
+<td style="text-align:right;">
+10
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+146
+</td>
+<td style="text-align:left;">
+Taiwan
+</td>
+<td style="text-align:right;">
+7
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+147
+</td>
+<td style="text-align:left;">
+Myanmar
+</td>
+<td style="text-align:right;">
+6
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+148
+</td>
+<td style="text-align:left;">
+Papua New Guinea
+</td>
+<td style="text-align:right;">
+4
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+149
+</td>
+<td style="text-align:left;">
+Botswana
+</td>
+<td style="text-align:right;">
+3
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+150
+</td>
+<td style="text-align:left;">
+Burundi
+</td>
+<td style="text-align:right;">
+1
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+151
+</td>
+<td style="text-align:left;">
+Eritrea
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+152
+</td>
+<td style="text-align:left;">
+Cambodia
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+153
+</td>
+<td style="text-align:left;">
+Laos
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+154
+</td>
+<td style="text-align:left;">
+Mongolia
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+155
+</td>
+<td style="text-align:left;">
+Timor
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+156
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="top-20-graph-3" class="section level3">
+<h3>Top 20 graph</h3>
+<div>
+<pre class="r"><code>ggplot(data=top20.total_deaths, 
+       aes(x=reorder(paste(position, location),total_deaths), 
+                                   y=total_deaths, fill=location))+
+  geom_bar(stat = &quot;identity&quot;, position=position_dodge(), colour=&quot;black&quot;, show.legend = FALSE)+
+  ylab(&quot;Total deaths from COVID-19&quot;) +
+  geom_text(aes(y=max(total_deaths)+7500, 
+                label=total_deaths_formated,
+                fontface=&quot;bold&quot;), 
+            color=&quot;black&quot;)+
+  labs(title=&quot;Top 20 of countries with total deaths from COVID-19&quot;,
+       subtitle = todayformatted,
+       caption = plotscaption)+
+  scale_y_continuous(breaks=c(10000, 25000, 50000, 75000, 100000, 150000, 170000), 
+                     label=c(&quot;10k&quot;, &quot;25k&quot;, &quot;50k&quot;, &quot;75k&quot;, &quot;100k&quot;, &quot;150k&quot;, &quot;170k&quot;))+
+  coord_flip() +
+  xlab(&quot;Countries&quot;) +
+  theme_bw()+
+  theme(title = element_text(size=14, face=&quot;bold&quot;, colour = &quot;black&quot;),
+        axis.text.y = element_text(size=11, face=&quot;bold&quot;, colour = &quot;black&quot;),
+        axis.text.x = element_text(size=11, face=&quot;bold&quot;, colour = &quot;black&quot;))</code></pre>
+<img src="notebook_covid19_eng_files/figure-html/Bar%20plot%20of%20total_deaths-1.png" width="1440" class=img-zoomable />
+</div>
+</div>
+</div>
+<div id="ranking-of-countries-by-total-deaths-from-covid-19-per-million-inhabitants-using-the-variable-total_deaths_per_million" class="section level2 tabset tabset-fade">
+<h2>Ranking of countries by total deaths from COVID-19 per million inhabitants using the variable <em>total_deaths_per_million</em></h2>
+<pre class="r"><code>ranking.total_deaths_per_million &lt;- covid.total.df[order(-covid.total.df$total_deaths_per_million),]
+ranking.total_deaths_per_million$position &lt;- 1:nrow(ranking.total_deaths_per_million)
+columnfilter &lt;- c(&quot;position&quot;, &quot;location&quot;, &quot;total_deaths_per_million&quot;)
+bottom20.total_deaths_per_million &lt;- tail(ranking.total_deaths_per_million[, columnfilter],20)
+top20.total_deaths_per_million &lt;- head(ranking.total_deaths_per_million[, columnfilter],20)
+mexrow &lt;- which(ranking.total_deaths_per_million$location==&#39;Mexico&#39;)
+rm(ranking.total_deaths_per_million)
+rownames(top20.total_deaths_per_million) &lt;- c()
+rownames(bottom20.total_deaths_per_million) &lt;- c()
+
+top20.total_deaths_per_million$total_deaths_per_million_formated &lt;- formatC(
+  top20.total_deaths_per_million$total_deaths_per_million, format=&quot;f&quot;, big.mark=&quot;,&quot;, digits=2)
+bottom20.total_deaths_per_million$total_deaths_per_million_formated &lt;- formatC(
+  bottom20.total_deaths_per_million$total_deaths_per_million, format=&quot;f&quot;, big.mark=&quot;,&quot;, digits=2)</code></pre>
+<div id="table-1" class="section level3">
+<h3>Table</h3>
+<div class = "row">
+
+<pre class="r"><code>tablecolnames &lt;- c(&quot;Position&quot;, &quot;Country&quot;, &quot;Deaths pmi&quot;)
+
+kable(top20.total_deaths_per_million[,c(1,2,4)], format = &quot;html&quot;, align = &quot;clr&quot;, 
+      col.names=tablecolnames, 
+      caption=&quot;Countries with most deaths from COVID-19 per million inhabitants (pmi)&quot;) %&gt;% 
+  kable_styling(bootstrap_options = c(&quot;striped&quot;, &quot;hover&quot;, &quot;condensed&quot;, &quot;responsive&quot;), 
+                full_width = F, position = &quot;float_left&quot;) %&gt;%
+  row_spec(mexrow, bold = T, color = &quot;black&quot;, background = &quot;yellow&quot;)
+
+kable(bottom20.total_deaths_per_million[,c(1,2,4)], format = &quot;html&quot;, align = &quot;clr&quot;, 
+      col.names=tablecolnames, 
+      caption=&quot;Countries with least deaths from COVID-19 per million inhabitants (pmi)&quot;) %&gt;% 
+  kable_styling(bootstrap_options = c(&quot;striped&quot;, &quot;hover&quot;, &quot;condensed&quot;, &quot;responsive&quot;), 
+                full_width = F, position = &quot;right&quot;)</code></pre>
+<table class="table table-striped table-hover table-condensed table-responsive" style="width: auto !important; float: left; margin-right: 10px;">
+<caption>
+Countries with most deaths from COVID-19 per million inhabitants (pmi)
+</caption>
+<thead>
+<tr>
+<th style="text-align:center;">
+Position
+</th>
+<th style="text-align:left;">
+Country
+</th>
+<th style="text-align:right;">
+Deaths pmi
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center;">
+1
+</td>
+<td style="text-align:left;">
+Belgium
+</td>
+<td style="text-align:right;">
+860.77
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+2
+</td>
+<td style="text-align:left;">
+Peru
+</td>
+<td style="text-align:right;">
+819.91
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+3
+</td>
+<td style="text-align:left;">
+United Kingdom
+</td>
+<td style="text-align:right;">
+609.89
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+4
+</td>
+<td style="text-align:left;">
+Italy
+</td>
+<td style="text-align:right;">
+585.79
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+5
+</td>
+<td style="text-align:left;">
+Sweden
+</td>
+<td style="text-align:right;">
+574.79
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+6
+</td>
+<td style="text-align:left;">
+Chile
+</td>
+<td style="text-align:right;">
+558.22
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+7
+</td>
+<td style="text-align:left;">
+Brazil
+</td>
+<td style="text-align:right;">
+528.34
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+8
+</td>
+<td style="text-align:left;">
+United States
+</td>
+<td style="text-align:right;">
+526.45
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+9
+</td>
+<td style="text-align:left;">
+France
+</td>
+<td style="text-align:right;">
+466.96
+</td>
+</tr>
+<tr>
+<td style="text-align:center;font-weight: bold;color: black !important;background-color: yellow !important;">
+10
+</td>
+<td style="text-align:left;font-weight: bold;color: black !important;background-color: yellow !important;">
+Mexico
+</td>
+<td style="text-align:right;font-weight: bold;color: black !important;background-color: yellow !important;">
+458.43
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+11
+</td>
+<td style="text-align:left;">
+Panama
+</td>
+<td style="text-align:right;">
+427.37
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+12
+</td>
+<td style="text-align:left;">
+Bolivia
+</td>
+<td style="text-align:right;">
+368.80
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+13
+</td>
+<td style="text-align:left;">
+Netherlands
+</td>
+<td style="text-align:right;">
+360.79
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+14
+</td>
+<td style="text-align:left;">
+Ireland
+</td>
+<td style="text-align:right;">
+359.68
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+15
+</td>
+<td style="text-align:left;">
+Ecuador
+</td>
+<td style="text-align:right;">
+351.41
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+16
+</td>
+<td style="text-align:left;">
+Colombia
+</td>
+<td style="text-align:right;">
+318.04
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+17
+</td>
+<td style="text-align:left;">
+Armenia
+</td>
+<td style="text-align:right;">
+282.12
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+18
+</td>
+<td style="text-align:left;">
+Macedonia
+</td>
+<td style="text-align:right;">
+263.99
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+19
+</td>
+<td style="text-align:left;">
+Iran
+</td>
+<td style="text-align:right;">
+241.26
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+20
+</td>
+<td style="text-align:left;">
+Canada
+</td>
+<td style="text-align:right;">
+239.89
+</td>
+</tr>
+</tbody>
+</table>
+<table class="table table-striped table-hover table-condensed table-responsive" style="width: auto !important; margin-right: 0; margin-left: auto">
+<caption>
+Countries with least deaths from COVID-19 per million inhabitants (pmi)
+</caption>
+<thead>
+<tr>
+<th style="text-align:center;">
+Position
+</th>
+<th style="text-align:left;">
+Country
+</th>
+<th style="text-align:right;">
+Deaths pmi
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center;">
+138
+</td>
+<td style="text-align:left;">
+Burkina Faso
+</td>
+<td style="text-align:right;">
+2.63
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+139
+</td>
+<td style="text-align:left;">
+Botswana
+</td>
+<td style="text-align:right;">
+1.28
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+140
+</td>
+<td style="text-align:left;">
+Jordan
+</td>
+<td style="text-align:right;">
+1.08
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+141
+</td>
+<td style="text-align:left;">
+Rwanda
+</td>
+<td style="text-align:right;">
+0.85
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+142
+</td>
+<td style="text-align:left;">
+Thailand
+</td>
+<td style="text-align:right;">
+0.83
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+143
+</td>
+<td style="text-align:left;">
+Mozambique
+</td>
+<td style="text-align:right;">
+0.64
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+144
+</td>
+<td style="text-align:left;">
+Sri Lanka
+</td>
+<td style="text-align:right;">
+0.51
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+145
+</td>
+<td style="text-align:left;">
+Papua New Guinea
+</td>
+<td style="text-align:right;">
+0.45
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+146
+</td>
+<td style="text-align:left;">
+Uganda
+</td>
+<td style="text-align:right;">
+0.41
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+147
+</td>
+<td style="text-align:left;">
+Tanzania
+</td>
+<td style="text-align:right;">
+0.35
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+148
+</td>
+<td style="text-align:left;">
+Taiwan
+</td>
+<td style="text-align:right;">
+0.29
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+149
+</td>
+<td style="text-align:left;">
+Vietnam
+</td>
+<td style="text-align:right;">
+0.26
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+150
+</td>
+<td style="text-align:left;">
+Myanmar
+</td>
+<td style="text-align:right;">
+0.11
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+151
+</td>
+<td style="text-align:left;">
+Burundi
+</td>
+<td style="text-align:right;">
+0.08
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+152
+</td>
+<td style="text-align:left;">
+Eritrea
+</td>
+<td style="text-align:right;">
+0.00
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+153
+</td>
+<td style="text-align:left;">
+Cambodia
+</td>
+<td style="text-align:right;">
+0.00
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+154
+</td>
+<td style="text-align:left;">
+Laos
+</td>
+<td style="text-align:right;">
+0.00
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+155
+</td>
+<td style="text-align:left;">
+Mongolia
+</td>
+<td style="text-align:right;">
+0.00
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+156
+</td>
+<td style="text-align:left;">
+Timor
+</td>
+<td style="text-align:right;">
+0.00
+</td>
+</tr>
+<tr>
+<td style="text-align:center;">
+157
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="top-20-graph-4" class="section level3">
+<h3>Top 20 graph</h3>
+<div>
+<pre class="r"><code>ggplot(data=top20.total_deaths_per_million, 
+       aes(x=reorder(paste(position, location),total_deaths_per_million), 
+           y=total_deaths_per_million, fill=location))+
+  geom_bar(stat = &quot;identity&quot;, position=position_dodge(), colour=&quot;black&quot;, show.legend = FALSE)+
+  ylab(&quot;Deaths from COVID-19 per million inhabitants&quot;) +
+  geom_text(aes(y=max(total_deaths_per_million)+25, 
+                label=total_deaths_per_million_formated,
+                fontface=&quot;bold&quot;),
+            color=&quot;black&quot;)+
+  labs(title=&quot;Top 20 countries by deaths from COVID-19 per million inhabitants&quot;,
+       subtitle = todayformatted,
+       caption = plotscaption)+
+  coord_flip() +
+  xlab(&quot;Countries&quot;) +
+  theme_bw()+
+  theme(title = element_text(size=14, face=&quot;bold&quot;, colour = &quot;black&quot;),
+        axis.text.y = element_text(size=11, face=&quot;bold&quot;, colour = &quot;black&quot;),
+        axis.text.x = element_text(size=11, face=&quot;bold&quot;, colour = &quot;black&quot;))</code></pre>
+<img src="notebook_covid19_eng_files/figure-html/Bar%20plot%20of%20total_deaths_per_million-1.png" width="1440" class=img-zoomable />
+</div>
+</div>
+</div>
+</div>
+<div id="trends-of-covid-19-cases-and-deaths-with-variables-new_cases-and-new_deaths" class="section level1">
+<h1>Trends of COVID-19 cases and deaths with variables: <em>new_cases</em> and <em>new_deaths</em></h1>
+<div id="daily-cases-reported-of-the-five-countries-with-most-cases-of-covid-19" class="section level2 tabset tabset-fade">
+<h2>Daily cases reported of the five countries with most cases of COVID-19</h2>
+<p>The following functions are created to facilitate building line graphs.</p>
+<pre class="r"><code>##Line plot of new_cases with date breaks by month
+plot.trend.new_cases.month &lt;- function(startdate, enddate, countries, graphtitle, graphsubtitle){
+  tmp.df &lt;- covid.df[covid.df$location %in% countries,]
+  tmp.df &lt;- tmp.df[tmp.df$date &gt;= startdate,]
+  tmp.df &lt;- tmp.df[tmp.df$date &lt;= enddate,]
+  ggplot(data=tmp.df , aes(x=date, y=new_cases, group=location, colour=location)) +
+    geom_line(size=1) +
+    scale_color_discrete(name = &quot;Countries&quot;)+
+    scale_x_date(date_breaks = &quot;month&quot;, date_labels = &quot;%B&quot;)+
+    ggtitle(graphtitle,
+            subtitle = graphsubtitle)+
+    labs(caption = plotscaption)+
+    ylab(&quot;New cases of COVID-19&quot;)+
+    xlab(&quot;Date&quot;)+
+    theme_bw()+
+    theme(title = element_text(size=14, face=&quot;bold&quot;, colour = &quot;black&quot;),
+          axis.text.y = element_text(size=11, face=&quot;bold&quot;, colour = &quot;black&quot;), 
+          axis.text.x = element_text(size=11, face=&quot;bold&quot;, colour = &quot;black&quot;),
+          legend.position = &quot;bottom&quot;,
+          legend.title = element_text(size = 14),
+          legend.text = element_text(size = 13),
+          legend.key.width = unit(1.5,&quot;cm&quot;))+
+    guides(colour = guide_legend(override.aes = list(size=2)))
+}
+##Line plot of new_cases with date breaks by short month and days
+plot.trend.new_cases.monthday &lt;- function(startdate, enddate, countries, graphtitle, graphsubtitle){
+  tmp.df &lt;- covid.df[covid.df$location %in% countries,]
+  tmp.df &lt;- tmp.df[tmp.df$date &gt;= startdate,]
+  tmp.df &lt;- tmp.df[tmp.df$date &lt;= enddate,]
+  ggplot(data=tmp.df , aes(x=date, y=new_cases, group=location, colour=location)) +
+    geom_line(size=1) +
+    scale_color_discrete(name = &quot;Countries&quot;)+
+    scale_x_date(date_breaks = &quot;day&quot;, date_labels = &quot;%b %d&quot;)+
+    ggtitle(graphtitle,
+            subtitle = graphsubtitle)+
+    labs(caption = plotscaption)+
+    ylab(&quot;New cases of COVID-19&quot;)+
+    xlab(&quot;Date&quot;)+
+    theme_bw()+
+    theme(title = element_text(size=14, face=&quot;bold&quot;, colour = &quot;black&quot;),
+          axis.text.y = element_text(size=11, face=&quot;bold&quot;, colour = &quot;black&quot;), 
+          axis.text.x = element_text(size=11, face=&quot;bold&quot;, colour = &quot;black&quot;),
+          legend.position = &quot;bottom&quot;,
+          legend.title = element_text(size = 14),
+          legend.text = element_text(size = 13),
+          legend.key.width = unit(1.5,&quot;cm&quot;))+
+    guides(colour = guide_legend(override.aes = list(size=2)))
+}</code></pre>
+<p>Line graphs with date ranges. The starting date varies, whereas the end date is always Friday, August 21, 2020.</p>
+<div id="all" class="section level3">
+<h3>All</h3>
+<div>
+<pre class="r"><code>top5.total_cases &lt;- c(head(as.character(top20.total_cases$location),5), &quot;Mexico&quot;)
+sublabel.tmp &lt;- paste(&quot;Range:&quot;, format(startdate, &quot;%m/%d/%Y&quot;),&quot;-&quot;, format(enddate, &quot;%m/%d/%Y&quot;))
+plot.trend.new_cases.month(startdate, enddate, top5.total_cases, &quot;Trends of new cases of COVID-19&quot;, sublabel.tmp)</code></pre>
+<img src="notebook_covid19_eng_files/figure-html/Function%20to%20plot%20trends:%20new_cases-1.png" width="1440" class=img-zoomable />
+</div>
+</div>
+<div id="months" class="section level3">
+<h3>-5 Months</h3>
+<div>
+<pre class="r"><code>mes.tmp &lt;- as.numeric(format(enddate, &quot;%m&quot;))-5
+mes.tmp &lt;- ifelse(mes.tmp &lt; 10, paste0(&quot;0&quot;,mes.tmp), mes.tmp)
+startdate.tmp &lt;- paste0(&quot;2020-&quot;, mes.tmp, &quot;-01&quot;)
+startdate.tmp &lt;- as.Date(startdate.tmp)
+sublabel.tmp &lt;- paste(&quot;Date range:&quot;, format(startdate.tmp, &quot;%m/%d/%Y&quot;),&quot;-&quot;, format(enddate, &quot;%m/%d/%Y&quot;))
+plot.trend.new_cases.month(startdate.tmp, enddate, top5.total_cases, &quot;Trends of new cases of COVID-19&quot;, sublabel.tmp)</code></pre>
+<img src="notebook_covid19_eng_files/figure-html/unnamed-chunk-2-1.png" width="1440" class=img-zoomable />
+</div>
+</div>
+<div id="months-1" class="section level3">
+<h3>-3 Months</h3>
+<div>
+<pre class="r"><code>mes.tmp &lt;- as.numeric(format(enddate, &quot;%m&quot;))-3
+mes.tmp &lt;- ifelse(mes.tmp &lt; 10, paste0(&quot;0&quot;,mes.tmp), mes.tmp)
+startdate.tmp &lt;- paste0(&quot;2020-&quot;, mes.tmp, &quot;-01&quot;)
+startdate.tmp &lt;- as.Date(startdate.tmp)
+sublabel.tmp &lt;- paste(&quot;Date range:&quot;, format(startdate.tmp, &quot;%m/%d/%Y&quot;),&quot;-&quot;, format(enddate, &quot;%m/%d/%Y&quot;))
+plot.trend.new_cases.month(startdate.tmp, enddate, top5.total_cases, &quot;Trends of new cases of COVID-19&quot;, sublabel.tmp)</code></pre>
+<img src="notebook_covid19_eng_files/figure-html/unnamed-chunk-3-1.png" width="1440" class=img-zoomable />
+</div>
+</div>
+<div id="months-2" class="section level3">
+<h3>-2 Months</h3>
+<div>
+<pre class="r"><code>mes.tmp &lt;- as.numeric(format(enddate, &quot;%m&quot;))-2
+mes.tmp &lt;- ifelse(mes.tmp &lt; 10, paste0(&quot;0&quot;,mes.tmp), mes.tmp)
+startdate.tmp &lt;- paste0(&quot;2020-&quot;, mes.tmp, &quot;-01&quot;)
+startdate.tmp &lt;- as.Date(startdate.tmp)
+sublabel.tmp &lt;- paste(&quot;Date range:&quot;, format(startdate.tmp, &quot;%m/%d/%Y&quot;),&quot;-&quot;, format(enddate, &quot;%m/%d/%Y&quot;))
+plot.trend.new_cases.month(startdate.tmp, enddate, top5.total_cases, &quot;Trends of new cases of COVID-19&quot;, sublabel.tmp)</code></pre>
+<img src="notebook_covid19_eng_files/figure-html/unnamed-chunk-4-1.png" width="1440" class=img-zoomable />
+</div>
+</div>
+<div id="month" class="section level3">
+<h3>-1 Month</h3>
+<div>
+<pre class="r"><code>mes.tmp &lt;- as.numeric(format(enddate, &quot;%m&quot;))-1
+mes.tmp &lt;- ifelse(mes.tmp &lt; 10, paste0(&quot;0&quot;,mes.tmp), mes.tmp)
+startdate.tmp &lt;- paste0(&quot;2020-&quot;, mes.tmp, &quot;-01&quot;)
+startdate.tmp &lt;- as.Date(startdate.tmp)
+sublabel.tmp &lt;- paste(&quot;Date range:&quot;, format(startdate.tmp, &quot;%m/%d/%Y&quot;),&quot;-&quot;, format(enddate, &quot;%m/%d/%Y&quot;))
+plot.trend.new_cases.month(startdate.tmp, enddate, top5.total_cases, &quot;Trends of new cases of COVID-19&quot;, sublabel.tmp)</code></pre>
+<img src="notebook_covid19_eng_files/figure-html/unnamed-chunk-5-1.png" width="1440" class=img-zoomable />
+</div>
+</div>
+<div id="weeks" class="section level3">
+<h3>-3 Weeks</h3>
+<div>
+<pre class="r"><code>sublabel.tmp &lt;- paste(&quot;Date range:&quot;, format(enddate-21, &quot;%d/%m/%Y&quot;),&quot;-&quot;, format(enddate, &quot;%d/%m/%Y&quot;))
+plot.trend.new_cases.monthday(enddate-21, enddate, top5.total_cases, &quot;Trends of new cases of COVID-19&quot;, sublabel.tmp)</code></pre>
+<img src="notebook_covid19_eng_files/figure-html/unnamed-chunk-6-1.png" width="1440" class=img-zoomable />
+</div>
+</div>
+<div id="weeks-1" class="section level3">
+<h3>-2 Weeks</h3>
+<div>
+<pre class="r"><code>sublabel.tmp &lt;- paste(&quot;Date range:&quot;, format(enddate-14, &quot;%d/%m/%Y&quot;),&quot;-&quot;, format(enddate, &quot;%d/%m/%Y&quot;))
+plot.trend.new_cases.monthday(enddate-14, enddate, top5.total_cases, &quot;Trends of new cases of COVID-19&quot;, sublabel.tmp)</code></pre>
+<img src="notebook_covid19_eng_files/figure-html/unnamed-chunk-7-1.png" width="1440" class=img-zoomable />
+</div>
+</div>
+</div>
+<div id="daily-deaths-of-the-five-countries-with-most-covid-19-cases" class="section level2 tabset tabset-fade">
+<h2>Daily deaths of the five countries with most COVID-19 cases</h2>
+<p>Functions to build the line graphs.</p>
+<pre class="r"><code>##Line plot of new_deaths with date breaks by month
+plot.trend.new_deaths.month &lt;- function(startdate, enddate, countries, graphtitle, graphsubtitle){
+  tmp.df &lt;- covid.df[covid.df$location %in% countries,]
+  tmp.df &lt;- tmp.df[tmp.df$date &gt;= startdate,]
+  tmp.df &lt;- tmp.df[tmp.df$date &lt;= enddate,]
+  ggplot(data=tmp.df , aes(x=date, y=new_deaths, group=location, colour=location)) +
+    geom_line(size=1) +
+    scale_color_discrete(name = &quot;Countries&quot;)+
+    scale_x_date(date_breaks = &quot;month&quot;, date_labels = &quot;%B&quot;)+
+    ggtitle(graphtitle,
+            subtitle = graphsubtitle)+
+    labs(caption = plotscaption)+
+    ylab(&quot;Daily deaths from COVID-19&quot;)+
+    xlab(&quot;Date&quot;)+
+    theme_bw()+
+    theme(title = element_text(size=14, face=&quot;bold&quot;, colour = &quot;black&quot;),
+          axis.text.y = element_text(size=11, face=&quot;bold&quot;, colour = &quot;black&quot;), 
+          axis.text.x = element_text(size=11, face=&quot;bold&quot;, colour = &quot;black&quot;),
+          legend.position = &quot;bottom&quot;,
+          legend.title = element_text(size = 14),
+          legend.text = element_text(size = 13),
+          legend.key.width = unit(1.5,&quot;cm&quot;))+
+    guides(colour = guide_legend(override.aes = list(size=2)))
+}
+##Line plot of new_deaths with date breaks by short month and day
+plot.trend.new_deaths.monthdays &lt;- function(startdate, enddate, countries, graphtitle, graphsubtitle){
+  tmp.df &lt;- covid.df[covid.df$location %in% countries,]
+  tmp.df &lt;- tmp.df[tmp.df$date &gt;= startdate,]
+  tmp.df &lt;- tmp.df[tmp.df$date &lt;= enddate,]
+  ggplot(data=tmp.df , aes(x=date, y=new_deaths, group=location, colour=location)) +
+    geom_line(size=1) +
+    scale_color_discrete(name = &quot;Countries&quot;)+
+    scale_x_date(date_breaks = &quot;day&quot;, date_labels = &quot;%b %d&quot;)+
+    ggtitle(graphtitle,
+            subtitle = graphsubtitle)+
+    labs(caption = plotscaption)+
+    ylab(&quot;Daily deaths from COVID-19&quot;)+
+    xlab(&quot;Date&quot;)+
+    theme_bw()+
+    theme(title = element_text(size=14, face=&quot;bold&quot;, colour = &quot;black&quot;),
+        axis.text.y = element_text(size=11, face=&quot;bold&quot;, colour = &quot;black&quot;),
+        axis.text.x = element_text(size=11, face=&quot;bold&quot;, colour = &quot;black&quot;),
+        legend.position = &quot;bottom&quot;,
+        legend.title = element_text(size = 14),
+        legend.text = element_text(size = 13),
+        legend.key.width = unit(1.5,&quot;cm&quot;))+
+        guides(colour = guide_legend(override.aes = list(size=2)))
+}</code></pre>
+<p>Line graphs with date ranges. The starting date varies, whereas the end date is always Friday, August 21, 2020.</p>
+<div id="all-1" class="section level3">
+<h3>All</h3>
+<div>
+<pre class="r"><code>top5.total_cases &lt;- c(head(as.character(top20.total_cases$location),5), &quot;Mexico&quot;)
+sublabel.tmp &lt;- paste(&quot;Date range:&quot;, format(startdate, &quot;%m/%d/%Y&quot;),&quot;-&quot;, format(enddate, &quot;%m/%d/%Y&quot;))
+title.tmp &lt;- &quot;Trends of daily deaths from COVID-19&quot;
+plot.trend.new_deaths.month(startdate, enddate, top5.total_cases, title.tmp, sublabel.tmp)</code></pre>
+<img src="notebook_covid19_eng_files/figure-html/unnamed-chunk-9-1.png" width="1440" class=img-zoomable />
+</div>
+</div>
+<div id="months-3" class="section level3">
+<h3>-5 Months</h3>
+<div>
+<pre class="r"><code>mes.tmp &lt;- as.numeric(format(enddate, &quot;%m&quot;))-5
+mes.tmp &lt;- ifelse(mes.tmp &lt; 10, paste0(&quot;0&quot;,mes.tmp), mes.tmp)
+startdate.tmp &lt;- paste0(&quot;2020-&quot;, mes.tmp, &quot;-01&quot;)
+startdate.tmp &lt;- as.Date(startdate.tmp)
+sublabel.tmp &lt;- paste(&quot;Date range:&quot;, format(startdate.tmp, &quot;%m/%d/%Y&quot;),&quot;-&quot;, format(enddate, &quot;%m/%d/%Y&quot;))
+plot.trend.new_deaths.month(startdate.tmp, enddate, top5.total_cases, title.tmp, sublabel.tmp)</code></pre>
+<img src="notebook_covid19_eng_files/figure-html/unnamed-chunk-10-1.png" width="1440" class=img-zoomable />
+</div>
+</div>
+<div id="months-4" class="section level3">
+<h3>-3 Months</h3>
+<div>
+<pre class="r"><code>mes.tmp &lt;- as.numeric(format(enddate, &quot;%m&quot;))-3
+mes.tmp &lt;- ifelse(mes.tmp &lt; 10, paste0(&quot;0&quot;,mes.tmp), mes.tmp)
+startdate.tmp &lt;- paste0(&quot;2020-&quot;, mes.tmp, &quot;-01&quot;)
+startdate.tmp &lt;- as.Date(startdate.tmp)
+sublabel.tmp &lt;- paste(&quot;Date range:&quot;, format(startdate.tmp, &quot;%m/%d/%Y&quot;),&quot;-&quot;, format(enddate, &quot;%m/%d/%Y&quot;))
+plot.trend.new_deaths.month(startdate.tmp, enddate, top5.total_cases, title.tmp, sublabel.tmp)</code></pre>
+<img src="notebook_covid19_eng_files/figure-html/unnamed-chunk-11-1.png" width="1440" class=img-zoomable />
+</div>
+</div>
+<div id="months-5" class="section level3">
+<h3>-2 Months</h3>
+<div>
+<pre class="r"><code>mes.tmp &lt;- as.numeric(format(enddate, &quot;%m&quot;))-2
+mes.tmp &lt;- ifelse(mes.tmp &lt; 10, paste0(&quot;0&quot;,mes.tmp), mes.tmp)
+startdate.tmp &lt;- paste0(&quot;2020-&quot;, mes.tmp, &quot;-01&quot;)
+startdate.tmp &lt;- as.Date(startdate.tmp)
+sublabel.tmp &lt;- paste(&quot;Date range:&quot;, format(startdate.tmp, &quot;%m/%d/%Y&quot;),&quot;-&quot;, format(enddate, &quot;%m/%d/%Y&quot;))
+plot.trend.new_deaths.month(startdate.tmp, enddate, top5.total_cases, title.tmp, sublabel.tmp)</code></pre>
+<img src="notebook_covid19_eng_files/figure-html/unnamed-chunk-12-1.png" width="1440" class=img-zoomable />
+</div>
+</div>
+<div id="month-1" class="section level3">
+<h3>-1 Month</h3>
+<div>
+<pre class="r"><code>mes.tmp &lt;- as.numeric(format(enddate, &quot;%m&quot;))-1
+mes.tmp &lt;- ifelse(mes.tmp &lt; 10, paste0(&quot;0&quot;,mes.tmp), mes.tmp)
+startdate.tmp &lt;- paste0(&quot;2020-&quot;, mes.tmp, &quot;-01&quot;)
+startdate.tmp &lt;- as.Date(startdate.tmp)
+sublabel.tmp &lt;- paste(&quot;Date range:&quot;, format(startdate.tmp, &quot;%m/%d/%Y&quot;),&quot;-&quot;, format(enddate, &quot;%m/%d/%Y&quot;))
+plot.trend.new_deaths.month(startdate.tmp, enddate, top5.total_cases, title.tmp, sublabel.tmp)</code></pre>
+<img src="notebook_covid19_eng_files/figure-html/unnamed-chunk-13-1.png" width="1440" class=img-zoomable />
+</div>
+</div>
+<div id="weeks-2" class="section level3">
+<h3>-3 Weeks</h3>
+<div>
+<pre class="r"><code>sublabel.tmp &lt;- paste(&quot;Date range:&quot;, format(enddate-21, &quot;%d/%m/%Y&quot;),&quot;-&quot;, format(enddate, &quot;%d/%m/%Y&quot;))
+plot.trend.new_deaths.monthdays(enddate-21, enddate, top5.total_cases, title.tmp, sublabel.tmp)</code></pre>
+<img src="notebook_covid19_eng_files/figure-html/unnamed-chunk-14-1.png" width="1440" class=img-zoomable />
+</div>
+</div>
+<div id="weeks-3" class="section level3">
+<h3>-2 Weeks</h3>
+<div>
+<pre class="r"><code>sublabel.tmp &lt;- paste(&quot;Date range:&quot;, format(enddate-14, &quot;%d/%m/%Y&quot;),&quot;-&quot;, format(enddate, &quot;%d/%m/%Y&quot;))
+plot.trend.new_deaths.monthdays(enddate-14, enddate, top5.total_cases, title.tmp, sublabel.tmp)</code></pre>
+<img src="notebook_covid19_eng_files/figure-html/unnamed-chunk-15-1.png" width="1440" class=img-zoomable />
+</div>
+</div>
+</div>
+</div>
+<div id="cumulative-covid-19-cases-and-deaths" class="section level1">
+<h1>Cumulative COVID-19 Cases and Deaths</h1>
+<p>For the following graphs, the variables <em>total_cases</em> and <em>total_deaths</em> are used.</p>
+<div id="curves-of-total-cases-of-the-five-countries-with-most-cases-méxico" class="section level2 tabset tabset-fade">
+<h2>Curves of total cases of the five countries with most cases (+ México)</h2>
+<p>Line graphs with date ranges. The starting date varies, whereas the end date is always Friday, August 21, 2020.</p>
+<p>Functions to build the line graphs.</p>
+<pre class="r"><code>##Line plot of new_total_cases with date breaks by month
+plot.trend.total_cases.month &lt;- function(startdate, enddate, countries, graphtitle, graphsubtitle){
+  tmp.df &lt;- covid.df[covid.df$location %in% countries,]
+  tmp.df &lt;- tmp.df[tmp.df$date &gt;= startdate,]
+  tmp.df &lt;- tmp.df[tmp.df$date &lt;= enddate,]
+  ggplot(data=tmp.df , aes(x=date, y=total_cases, group=location, colour=location)) +
+    geom_line(size=1) +
+    scale_color_discrete(name = &quot;Countries&quot;)+
+    scale_x_date(date_breaks = &quot;month&quot;, date_labels = &quot;%B&quot;)+
+    ggtitle(graphtitle,
+            subtitle = graphsubtitle)+
+    labs(caption = plotscaption)+
+    ylab(&quot;Cumulative cases of COVID-19&quot;)+
+    xlab(&quot;Date&quot;)+
+    theme_bw()+
+    theme(title = element_text(size=14, face=&quot;bold&quot;, colour = &quot;black&quot;),
+        axis.text.y = element_text(size=11, face=&quot;bold&quot;, colour = &quot;black&quot;),
+        axis.text.x = element_text(size=11, face=&quot;bold&quot;, colour = &quot;black&quot;),
+        legend.position = &quot;bottom&quot;,
+        legend.title = element_text(size = 14),
+        legend.text = element_text(size = 13),
+        legend.key.width = unit(1.5,&quot;cm&quot;))+
+        guides(colour = guide_legend(override.aes = list(size=2)))
+}
+##Line plot of new_deaths with date breaks by short month and day
+plot.trend.total_cases.monthdays &lt;- function(startdate, enddate, countries, graphtitle, graphsubtitle){
+  tmp.df &lt;- covid.df[covid.df$location %in% countries,]
+  tmp.df &lt;- tmp.df[tmp.df$date &gt;= startdate,]
+  tmp.df &lt;- tmp.df[tmp.df$date &lt;= enddate,]
+  ggplot(data=tmp.df , aes(x=date, y=total_cases, group=location, colour=location)) +
+    geom_line(size=1) +
+    scale_color_discrete(name = &quot;Países&quot;)+
+    scale_x_date(date_breaks = &quot;day&quot;, date_labels = &quot;%b %d&quot;)+
+    ggtitle(graphtitle,
+            subtitle = graphsubtitle)+
+    labs(caption = plotscaption)+
+    ylab(&quot;Cumulative cases of COVID-19&quot;)+
+    xlab(&quot;Date&quot;)+
+    theme_bw()+
+    theme(title = element_text(size=14, face=&quot;bold&quot;, colour = &quot;black&quot;),
+        axis.text.y = element_text(size=11, face=&quot;bold&quot;, colour = &quot;black&quot;),
+        axis.text.x = element_text(size=11, face=&quot;bold&quot;, colour = &quot;black&quot;),
+        legend.position = &quot;bottom&quot;,
+        legend.title = element_text(size = 14),
+        legend.text = element_text(size = 13),
+        legend.key.width = unit(1.5,&quot;cm&quot;))+
+        guides(colour = guide_legend(override.aes = list(size=2)))
+}</code></pre>
+<div id="all-2" class="section level3">
+<h3>All</h3>
+<div>
+<pre class="r"><code>sublabel.tmp &lt;- paste(&quot;Date range:&quot;, format(startdate, &quot;%m/%d/%Y&quot;),&quot;-&quot;, format(enddate, &quot;%m/%d/%Y&quot;))
+title.tmp &lt;- &quot;Cumulative cases of COVID-19&quot;
+plot.trend.total_cases.month(startdate, enddate, top5.total_cases, title.tmp, sublabel.tmp)</code></pre>
+<img src="notebook_covid19_eng_files/figure-html/unnamed-chunk-16-1.png" width="1440" class=img-zoomable />
+</div>
+</div>
+<div id="months-6" class="section level3">
+<h3>-5 Months</h3>
+<div>
+<pre class="r"><code>mes.tmp &lt;- as.numeric(format(enddate, &quot;%m&quot;))-5
+mes.tmp &lt;- ifelse(mes.tmp &lt; 10, paste0(&quot;0&quot;,mes.tmp), mes.tmp)
+startdate.tmp &lt;- paste0(&quot;2020-&quot;, mes.tmp, &quot;-01&quot;)
+startdate.tmp &lt;- as.Date(startdate.tmp)
+sublabel.tmp &lt;- paste(&quot;Date range:&quot;, format(startdate.tmp, &quot;%m/%d/%Y&quot;),&quot;-&quot;, format(enddate, &quot;%m/%d/%Y&quot;))
+plot.trend.total_cases.month(startdate.tmp, enddate, top5.total_cases, title.tmp, sublabel.tmp)</code></pre>
+<img src="notebook_covid19_eng_files/figure-html/unnamed-chunk-17-1.png" width="1440" class=img-zoomable />
+</div>
+</div>
+<div id="months-7" class="section level3">
+<h3>-3 Months</h3>
+<div>
+<pre class="r"><code>mes.tmp &lt;- as.numeric(format(enddate, &quot;%m&quot;))-3
+mes.tmp &lt;- ifelse(mes.tmp &lt; 10, paste0(&quot;0&quot;,mes.tmp), mes.tmp)
+startdate.tmp &lt;- paste0(&quot;2020-&quot;, mes.tmp, &quot;-01&quot;)
+startdate.tmp &lt;- as.Date(startdate.tmp)
+sublabel.tmp &lt;- paste(&quot;Date range:&quot;, format(startdate.tmp, &quot;%m/%d/%Y&quot;),&quot;-&quot;, format(enddate, &quot;%m/%d/%Y&quot;))
+plot.trend.total_cases.month(startdate.tmp, enddate, top5.total_cases, title.tmp, sublabel.tmp)</code></pre>
+<img src="notebook_covid19_eng_files/figure-html/unnamed-chunk-18-1.png" width="1440" class=img-zoomable />
+</div>
+</div>
+<div id="months-8" class="section level3">
+<h3>-2 Months</h3>
+<div>
+<pre class="r"><code>mes.tmp &lt;- as.numeric(format(enddate, &quot;%m&quot;))-2
+mes.tmp &lt;- ifelse(mes.tmp &lt; 10, paste0(&quot;0&quot;,mes.tmp), mes.tmp)
+startdate.tmp &lt;- paste0(&quot;2020-&quot;, mes.tmp, &quot;-01&quot;)
+startdate.tmp &lt;- as.Date(startdate.tmp)
+sublabel.tmp &lt;- paste(&quot;Date range:&quot;, format(startdate.tmp, &quot;%m/%d/%Y&quot;),&quot;-&quot;, format(enddate, &quot;%m/%d/%Y&quot;))
+plot.trend.total_cases.month(startdate.tmp, enddate, top5.total_cases, title.tmp, sublabel.tmp)</code></pre>
+<img src="notebook_covid19_eng_files/figure-html/unnamed-chunk-19-1.png" width="1440" class=img-zoomable />
+</div>
+</div>
+<div id="month-2" class="section level3">
+<h3>-1 Month</h3>
+<div>
+<pre class="r"><code>mes.tmp &lt;- as.numeric(format(enddate, &quot;%m&quot;))-1
+mes.tmp &lt;- ifelse(mes.tmp &lt; 10, paste0(&quot;0&quot;,mes.tmp), mes.tmp)
+startdate.tmp &lt;- paste0(&quot;2020-&quot;, mes.tmp, &quot;-01&quot;)
+startdate.tmp &lt;- as.Date(startdate.tmp)
+sublabel.tmp &lt;- paste(&quot;Date range:&quot;, format(startdate.tmp, &quot;%m/%d/%Y&quot;),&quot;-&quot;, format(enddate, &quot;%m/%d/%Y&quot;))
+plot.trend.total_cases.month(startdate.tmp, enddate, top5.total_cases, title.tmp, sublabel.tmp)</code></pre>
+<img src="notebook_covid19_eng_files/figure-html/unnamed-chunk-20-1.png" width="1440" class=img-zoomable />
+</div>
+</div>
+<div id="month-top37" class="section level3">
+<h3>-1 Month TOP[3:7]</h3>
+<p>The amount of cases of United States and Brazil do not allow to appreciate in detail the curves of the rest of the countries. Those two countries are removed from the graph, the countries in positions 6 and 7 of the top 20 of countries with most cases are added.</p>
+<div>
+<pre class="r"><code>mes.tmp &lt;- as.numeric(format(enddate, &quot;%m&quot;))-1
+mes.tmp &lt;- ifelse(mes.tmp &lt; 10, paste0(&quot;0&quot;,mes.tmp), mes.tmp)
+startdate.tmp &lt;- paste0(&quot;2020-&quot;, mes.tmp, &quot;-01&quot;)
+startdate.tmp &lt;- as.Date(startdate.tmp)
+sublabel.tmp &lt;- paste(&quot;Date range:&quot;, format(startdate.tmp, &quot;%m/%d/%Y&quot;),&quot;-&quot;, format(enddate, &quot;%m/%d/%Y&quot;))
+total_cases.others &lt;- as.character(top20.total_cases$location)[3:7]
+plot.trend.total_cases.month(startdate.tmp, enddate, total_cases.others, title.tmp, sublabel.tmp)</code></pre>
+<img src="notebook_covid19_eng_files/figure-html/unnamed-chunk-21-1.png" width="1440" class=img-zoomable />
+</div>
+</div>
+<div id="weeks-top37" class="section level3">
+<h3>-3 Weeks TOP[3:7]</h3>
+<div>
+<pre class="r"><code>sublabel.tmp &lt;- paste(&quot;Date range:&quot;, format(enddate-21, &quot;%d/%m/%Y&quot;),&quot;-&quot;, format(enddate, &quot;%d/%m/%Y&quot;))
+plot.trend.total_cases.monthdays(enddate-21, enddate, total_cases.others, title.tmp, sublabel.tmp)</code></pre>
+<img src="notebook_covid19_eng_files/figure-html/unnamed-chunk-22-1.png" width="1440" class=img-zoomable />
+</div>
+</div>
+<div id="weeks-top37-1" class="section level3">
+<h3>-2 Weeks TOP[3:7]</h3>
+<div>
+<pre class="r"><code>sublabel.tmp &lt;- paste(&quot;Date range:&quot;, format(enddate-14, &quot;%d/%m/%Y&quot;),&quot;-&quot;, format(enddate, &quot;%d/%m/%Y&quot;))
+plot.trend.total_cases.monthdays(enddate-14, enddate, total_cases.others, title.tmp, sublabel.tmp)</code></pre>
+<img src="notebook_covid19_eng_files/figure-html/unnamed-chunk-23-1.png" width="1440" class=img-zoomable />
+</div>
+</div>
+<div id="weeks-mx-pe-y-sa" class="section level3">
+<h3>-2 Weeks MX, PE y SA</h3>
+<div>
+<pre class="r"><code>total_cases.others &lt;- as.character(top20.total_cases$location)[3:7]
+total_cases.others &lt;- total_cases.others[c(-1,-2)]
+countrieslabels &lt;- paste(total_cases.others, collapse = &#39;, &#39;)
+sublabel.tmp &lt;- paste(&quot;Date range:&quot;, format(enddate-14, &quot;%d/%m/%Y&quot;),&quot;-&quot;, format(enddate, &quot;%d/%m/%Y&quot;))
+title.tmp &lt;- paste(title.tmp, &quot;of&quot;, countrieslabels)
+plot.trend.total_cases.monthdays(enddate-14, enddate, total_cases.others, title.tmp, sublabel.tmp)</code></pre>
+<img src="notebook_covid19_eng_files/figure-html/unnamed-chunk-24-1.png" width="1440" class=img-zoomable />
+</div>
+</div>
+</div>
+<div id="curves-of-daily-deaths-of-the-five-countries-with-most-deaths-from-covid-19-méxico" class="section level2 tabset tabset-fade">
+<h2>Curves of daily deaths of the five countries with most deaths from COVID-19 (+ México)</h2>
+<p>Line graphs with date ranges. The starting date varies, whereas the end date is always Friday, August 21, 2020.</p>
+<p>Functions to build the line graphs.</p>
+<pre class="r"><code># Generate total_deaths line plot with month breaks
+plot.trend.total_deaths.month &lt;- function(startdate, enddate, countries, graphtitle, subgraphtitle){
+  tmp.df &lt;- covid.df[covid.df$location %in% countries,]
+  tmp.df &lt;- tmp.df[tmp.df$date &gt;= startdate,]
+  tmp.df &lt;- tmp.df[tmp.df$date &lt;= enddate,]
+  ggplot(data=tmp.df , aes(x=date, y=total_deaths, group=location, colour=location)) +
+    geom_line(size=1) +
+    scale_color_discrete(name = &quot;Countries&quot;)+
+    scale_x_date(date_breaks = &quot;month&quot;, date_labels = &quot;%B&quot;)+
+    ggtitle(graphtitle,
+            subtitle = subgraphtitle)+
+    labs(caption = plotscaption)+
+    ylab(&quot;Cumulative deaths from COVID-19&quot;)+
+    xlab(&quot;Date&quot;)+
+    theme_bw()+
+    theme(title = element_text(size=14, face=&quot;bold&quot;, colour = &quot;black&quot;),
+        axis.text.y = element_text(size=11, face=&quot;bold&quot;, colour = &quot;black&quot;),
+        axis.text.x = element_text(size=11, face=&quot;bold&quot;, colour = &quot;black&quot;),
+        legend.position = &quot;bottom&quot;,
+        legend.title = element_text(size = 14),
+        legend.text = element_text(size = 13),
+        legend.key.width = unit(1.5,&quot;cm&quot;))+
+        guides(colour = guide_legend(override.aes = list(size=2)))
+}
+# Generate total_deaths line plot with month and day breaks
+plot.trend.total_deaths.monthdays &lt;- function(startdate, enddate, countries, graphtitle, subgraphtitle){
+  tmp.df &lt;- covid.df[covid.df$location %in% countries,]
+  tmp.df &lt;- tmp.df[tmp.df$date &gt;= startdate,]
+  tmp.df &lt;- tmp.df[tmp.df$date &lt;= enddate,]
+  ggplot(data=tmp.df , aes(x=date, y=total_deaths, group=location, colour=location)) +
+    geom_line(size=1) +
+    scale_color_discrete(name = &quot;Countries&quot;)+
+    scale_x_date(date_breaks = &quot;day&quot;, date_labels = &quot;%b %d&quot;)+
+    ggtitle(graphtitle,
+            subtitle = subgraphtitle)+
+    labs(caption = plotscaption)+
+    ylab(&quot;Cumulative deaths from COVID-19&quot;)+
+    xlab(&quot;Date&quot;)+
+    theme_bw()+
+    theme(title = element_text(size=14, face=&quot;bold&quot;, colour = &quot;black&quot;),
+        axis.text.y = element_text(size=11, face=&quot;bold&quot;, colour = &quot;black&quot;),
+        axis.text.x = element_text(size=11, face=&quot;bold&quot;, colour = &quot;black&quot;),
+        legend.position = &quot;bottom&quot;,
+        legend.title = element_text(size = 14),
+        legend.text = element_text(size = 13),
+        legend.key.width = unit(1.5,&quot;cm&quot;))+
+        guides(colour = guide_legend(override.aes = list(size=2)))
+}</code></pre>
+<div id="all-3" class="section level3">
+<h3>All</h3>
+<div>
+<pre class="r"><code>top5.total_deaths &lt;-  head(as.character(top20.total_deaths$location),5)
+sublabel.tmp &lt;- paste(&quot;Date range:&quot;, format(startdate, &quot;%m/%d/%Y&quot;),&quot;-&quot;, format(enddate, &quot;%m/%d/%Y&quot;))
+title.tmp &lt;- &quot;Cumulative deaths from COVID-19&quot;
+plot.trend.total_deaths.month(startdate, enddate, top5.total_deaths, title.tmp, sublabel.tmp)</code></pre>
+<img src="notebook_covid19_eng_files/figure-html/unnamed-chunk-26-1.png" width="1440" class=img-zoomable />
+</div>
+</div>
+<div id="months-9" class="section level3">
+<h3>-5 Months</h3>
+<div>
+<pre class="r"><code>mes.tmp &lt;- as.numeric(format(enddate, &quot;%m&quot;))-5
+mes.tmp &lt;- ifelse(mes.tmp &lt; 10, paste0(&quot;0&quot;,mes.tmp), mes.tmp)
+startdate.tmp &lt;- paste0(&quot;2020-&quot;, mes.tmp, &quot;-01&quot;)
+startdate.tmp &lt;- as.Date(startdate.tmp)
+sublabel.tmp &lt;- paste(&quot;Date range:&quot;, format(startdate.tmp, &quot;%m/%d/%Y&quot;),&quot;-&quot;, format(enddate, &quot;%m/%d/%Y&quot;))
+plot.trend.total_deaths.month(startdate.tmp, enddate, top5.total_deaths, title.tmp, sublabel.tmp)</code></pre>
+<img src="notebook_covid19_eng_files/figure-html/unnamed-chunk-27-1.png" width="1440" class=img-zoomable />
+</div>
+</div>
+<div id="months-10" class="section level3">
+<h3>-3 Months</h3>
+<div>
+<pre class="r"><code>mes.tmp &lt;- as.numeric(format(enddate, &quot;%m&quot;))-3
+mes.tmp &lt;- ifelse(mes.tmp &lt; 10, paste0(&quot;0&quot;,mes.tmp), mes.tmp)
+startdate.tmp &lt;- paste0(&quot;2020-&quot;, mes.tmp, &quot;-01&quot;)
+startdate.tmp &lt;- as.Date(startdate.tmp)
+sublabel.tmp &lt;- paste(&quot;Date range:&quot;, format(startdate.tmp, &quot;%m/%d/%Y&quot;),&quot;-&quot;, format(enddate, &quot;%m/%d/%Y&quot;))
+plot.trend.total_deaths.month(startdate.tmp, enddate, top5.total_deaths, title.tmp, sublabel.tmp)</code></pre>
+<img src="notebook_covid19_eng_files/figure-html/unnamed-chunk-28-1.png" width="1440" class=img-zoomable />
+</div>
+</div>
+<div id="months-11" class="section level3">
+<h3>-2 Months</h3>
+<div>
+<pre class="r"><code>mes.tmp &lt;- as.numeric(format(enddate, &quot;%m&quot;))-2
+mes.tmp &lt;- ifelse(mes.tmp &lt; 10, paste0(&quot;0&quot;,mes.tmp), mes.tmp)
+startdate.tmp &lt;- paste0(&quot;2020-&quot;, mes.tmp, &quot;-01&quot;)
+startdate.tmp &lt;- as.Date(startdate.tmp)
+sublabel.tmp &lt;- paste(&quot;Date range:&quot;, format(startdate.tmp, &quot;%m/%d/%Y&quot;),&quot;-&quot;, format(enddate, &quot;%m/%d/%Y&quot;))
+plot.trend.total_deaths.month(startdate.tmp, enddate, top5.total_deaths, title.tmp, sublabel.tmp)</code></pre>
+<img src="notebook_covid19_eng_files/figure-html/unnamed-chunk-29-1.png" width="1440" class=img-zoomable />
+</div>
+</div>
+<div id="months-12" class="section level3">
+<h3>-1 Months</h3>
+<div>
+<pre class="r"><code>mes.tmp &lt;- as.numeric(format(enddate, &quot;%m&quot;))-1
+mes.tmp &lt;- ifelse(mes.tmp &lt; 10, paste0(&quot;0&quot;,mes.tmp), mes.tmp)
+startdate.tmp &lt;- paste0(&quot;2020-&quot;, mes.tmp, &quot;-01&quot;)
+startdate.tmp &lt;- as.Date(startdate.tmp)
+sublabel.tmp &lt;- paste(&quot;Date range:&quot;, format(startdate.tmp, &quot;%m/%d/%Y&quot;),&quot;-&quot;, format(enddate, &quot;%m/%d/%Y&quot;))
+plot.trend.total_deaths.month(startdate.tmp, enddate, top5.total_deaths, title.tmp, sublabel.tmp)</code></pre>
+<img src="notebook_covid19_eng_files/figure-html/unnamed-chunk-30-1.png" width="1440" class=img-zoomable />
+</div>
+</div>
+<div id="month-top37-1" class="section level3">
+<h3>-1 Month TOP[3:7]</h3>
+<p>The amount of deaths of United States and Brazil do not allow to appreciate in detail the curves of the rest of the countries. Those two countries are removed from the graph, the countries in positions 6 and 7 of the top 20 of countries with the most total deaths are added.</p>
+<div>
+<pre class="r"><code>mes.tmp &lt;- as.numeric(format(enddate, &quot;%m&quot;))-1
+mes.tmp &lt;- ifelse(mes.tmp &lt; 10, paste0(&quot;0&quot;,mes.tmp), mes.tmp)
+startdate.tmp &lt;- paste0(&quot;2020-&quot;, mes.tmp, &quot;-01&quot;)
+startdate.tmp &lt;- as.Date(startdate.tmp)
+sublabel.tmp &lt;- paste(&quot;Date range:&quot;, format(startdate.tmp, &quot;%m/%d/%Y&quot;),&quot;-&quot;, format(enddate, &quot;%m/%d/%Y&quot;))
+total_deaths.others &lt;- as.character(top20.total_deaths$location)[3:7]
+plot.trend.total_deaths.month(startdate.tmp, enddate, total_deaths.others, title.tmp, sublabel.tmp)</code></pre>
+<img src="notebook_covid19_eng_files/figure-html/unnamed-chunk-31-1.png" width="1440" class=img-zoomable />
+</div>
+</div>
+<div id="weeks-top37-2" class="section level3">
+<h3>-3 Weeks TOP[3:7]</h3>
+<div>
+<pre class="r"><code>sublabel.tmp &lt;- paste(&quot;Date range:&quot;, format(enddate-21, &quot;%d/%m/%Y&quot;),&quot;-&quot;, format(enddate, &quot;%d/%m/%Y&quot;))
+plot.trend.total_deaths.monthdays(enddate-21, enddate, total_deaths.others, title.tmp, sublabel.tmp)</code></pre>
+<img src="notebook_covid19_eng_files/figure-html/unnamed-chunk-32-1.png" width="1440" class=img-zoomable />
+</div>
+</div>
+<div id="weeks-in-ir-mx-pe-ru" class="section level3">
+<h3>-3 Weeks IN, IR, MX, PE, RU</h3>
+<p>The acumulative curves of France, Italy, and the United Kindgdom are almost flat, the number of deaths from COVID-19 has stagnated. One possible reason is that the pandemic started first in Europe and the number of recently reported deaths is zero or very low. The curves for Mexico and India continues to rise. The countries of France, Italy, and the United Kingdom are discarded from the data. Other countries are added where it seems that the number of deaths from COVID-19 is still increasing. The graph is generated with the accumulated death curves of the last 3 weeks of India, Iran, Mexico, Peru and Russia:</p>
+<div>
+<pre class="r"><code>total_deaths.others &lt;- as.character(top20.total_deaths$location)[c(3,5,8,9,10)]
+countrieslabels &lt;- paste(total_deaths.others, collapse = &#39;, &#39;)
+title.tmp &lt;- paste(title.tmp, &quot;de&quot;, countrieslabels)
+sublabel.tmp &lt;- paste(&quot;Date range:&quot;, format(enddate-21, &quot;%d/%m/%Y&quot;),&quot;-&quot;, format(enddate, &quot;%d/%m/%Y&quot;))
+plot.trend.total_deaths.monthdays(enddate-21, enddate, total_deaths.others, title.tmp, sublabel.tmp)</code></pre>
+<img src="notebook_covid19_eng_files/figure-html/unnamed-chunk-33-1.png" width="1440" class=img-zoomable />
+</div>
+</div>
+<div id="weeks-in-ir-mx-pe-ru-1" class="section level3">
+<h3>-2 Weeks IN, IR, MX, PE, RU</h3>
+<div>
+<pre class="r"><code>total_deaths.others &lt;- as.character(top20.total_deaths$location)[c(3,5,8,9,10)]
+countrieslabels &lt;- paste(total_deaths.others, collapse = &#39;, &#39;)
+title.tmp &lt;- paste(title.tmp, &quot;de&quot;, countrieslabels)
+sublabel.tmp &lt;- paste(&quot;Date range:&quot;, format(enddate-14, &quot;%d/%m/%Y&quot;),&quot;-&quot;, format(enddate, &quot;%d/%m/%Y&quot;))
+plot.trend.total_deaths.monthdays(enddate-14, enddate, total_deaths.others, title.tmp, sublabel.tmp)</code></pre>
+<img src="notebook_covid19_eng_files/figure-html/unnamed-chunk-34-1.png" width="1440" class=img-zoomable />
+</div>
+</div>
+</div>
+</div>
+<div id="comparison-of-covid-19-cases-and-deaths-curves-in-mexico" class="section level1 tabset tabset-fade">
+<h1>Comparison of COVID-19 cases and deaths curves in Mexico</h1>
+<div id="daily-cases-and-deaths" class="section level2">
+<h2>Daily cases and deaths</h2>
+<div>
+<pre class="r"><code>covid.mexico &lt;- covid.df[covid.df$location==&#39;Mexico&#39;,]
+covid.mexico &lt;- covid.mexico[covid.mexico$date &gt; &quot;2020-04-01&quot;,]
+covid.mexico.new &lt;- covid.mexico[,c(&quot;date&quot;, &quot;new_cases&quot;, &quot;new_deaths&quot;)]
+covid.mexico.new.lf &lt;-melt(covid.mexico.new, id.vars = c(&quot;date&quot;))
+ggplot(data=covid.mexico.new.lf , aes(x=date, y=value, group=variable, colour=variable)) +
+    geom_line(size=1) +
+    scale_color_discrete(name = &quot;Indicator&quot;, labels=c(&quot;Cases&quot;, &quot;Deaths&quot;))+
+    scale_x_date(date_breaks = &quot;week&quot;, date_labels = &quot;%b %d&quot;)+
+    ggtitle(&quot;COVID-19 Daily cases and deaths in México&quot;)+
+    labs(caption = plotscaption)+
+    ylab(&quot;&quot;)+
+    xlab(&quot;Date&quot;)+
+    theme_bw()+
+    theme(title = element_text(size=14, face=&quot;bold&quot;, colour = &quot;black&quot;),
+          axis.text.y = element_text(size=11, face=&quot;bold&quot;, colour = &quot;black&quot;), 
+          axis.text.x = element_text(size=11, face=&quot;bold&quot;, colour = &quot;black&quot;),
+          legend.position = &quot;bottom&quot;,
+          legend.title = element_text(size = 14),
+          legend.text = element_text(size = 13),
+          legend.key.width = unit(1.5,&quot;cm&quot;))+
+    guides(colour = guide_legend(override.aes = list(size=2)))</code></pre>
+<img src="notebook_covid19_eng_files/figure-html/unnamed-chunk-35-1.png" width="1440" class=img-zoomable />
+</div>
+</div>
+<div id="daily-cases-and-deaths-last-month" class="section level2">
+<h2>Daily cases and deaths last month</h2>
+<div>
+<pre class="r"><code>covid.mexico.new.lastmonth &lt;- covid.mexico.new[covid.mexico.new$date &gt;= enddate-30, ]
+covid.mexico.new.lastmonth.lf &lt;- melt(covid.mexico.new.lastmonth, id.vars = c(&quot;date&quot;))
+ggplot(data=covid.mexico.new.lastmonth.lf , aes(x=date, y=value, group=variable, colour=variable)) +
+    geom_line(size=1) +
+    scale_color_discrete(name = &quot;Indicator&quot;, labels=c(&quot;Cases&quot;, &quot;Deaths&quot;))+
+    scale_x_date(date_breaks = &quot;week&quot;, date_labels = &quot;%b %d&quot;)+
+    ggtitle(&quot;COVID-19 Daily cases and deaths in México - Last month&quot;)+
+    labs(caption = plotscaption)+
+    ylab(&quot;&quot;)+
+    xlab(&quot;Date&quot;)+
+    theme_bw()+
+    theme(title = element_text(size=14, face=&quot;bold&quot;, colour = &quot;black&quot;),
+          axis.text.y = element_text(size=11, face=&quot;bold&quot;, colour = &quot;black&quot;), 
+          axis.text.x = element_text(size=11, face=&quot;bold&quot;, colour = &quot;black&quot;),
+          legend.position = &quot;bottom&quot;,
+          legend.title = element_text(size = 14),
+          legend.text = element_text(size = 13),
+          legend.key.width = unit(1.5,&quot;cm&quot;))+
+    guides(colour = guide_legend(override.aes = list(size=2)))</code></pre>
+<img src="notebook_covid19_eng_files/figure-html/unnamed-chunk-36-1.png" width="1440" class=img-zoomable />
+</div>
+</div>
+<div id="total-cases-and-deaths" class="section level2">
+<h2>Total cases and deaths</h2>
+<div>
+<pre class="r"><code>covid.mexico.total &lt;- covid.mexico[,c(&quot;date&quot;, &quot;total_cases&quot;, &quot;total_deaths&quot;)]
+covid.mexico.total.lf &lt;-melt(covid.mexico.total, id.vars = c(&quot;date&quot;))
+ggplot(data=covid.mexico.total.lf , aes(x=date, y=value, group=variable, colour=variable)) +
+    geom_line(size=1) +
+    scale_color_discrete(name = &quot;Indicator&quot;, labels=c(&quot;Cases&quot;, &quot;Deaths&quot;))+
+    scale_x_date(date_breaks = &quot;week&quot;, date_labels = &quot;%b %d&quot;)+
+    scale_y_continuous(breaks=c(50000, 100000, 200000, 300000, 400000, 500000, 750000),
+                     label=c(&quot;50k&quot;,&quot;100k&quot;, &quot;200k&quot;, &quot;300k&quot;, &quot;400k&quot;, &quot;500k&quot;, &quot;750k&quot;))+
+    ggtitle(&quot;COVID-19 Cumulative cases and deaths in México&quot;)+
+    labs(caption = plotscaption)+
+    ylab(&quot;&quot;)+
+    xlab(&quot;Date&quot;)+
+    theme_bw()+
+    theme(title = element_text(size=14, face=&quot;bold&quot;, colour = &quot;black&quot;),
+          axis.text.y = element_text(size=11, face=&quot;bold&quot;, colour = &quot;black&quot;), 
+          axis.text.x = element_text(size=11, face=&quot;bold&quot;, colour = &quot;black&quot;),
+          legend.position = &quot;bottom&quot;,
+          legend.title = element_text(size = 14),
+          legend.text = element_text(size = 13),
+          legend.key.width = unit(1.5,&quot;cm&quot;))+
+    guides(colour = guide_legend(override.aes = list(size=2)))</code></pre>
+<img src="notebook_covid19_eng_files/figure-html/unnamed-chunk-37-1.png" width="1440" class=img-zoomable />
+</div>
+</div>
+<div id="total-cases-and-deaths-last-month" class="section level2">
+<h2>Total cases and deaths last month</h2>
+<div>
+<pre class="r"><code>covid.mexico.total.lasttmonth &lt;- covid.mexico.total[covid.mexico.total$date &gt;= enddate-30, ]
+covid.mexico.total.lasttmonth.lf &lt;- melt(covid.mexico.total.lasttmonth, id.vars = c(&quot;date&quot;))
+ggplot(data=covid.mexico.total.lasttmonth.lf , aes(x=date, y=value, group=variable, colour=variable)) +
+    geom_line(size=1) +
+    scale_color_discrete(name = &quot;Indicator&quot;, labels=c(&quot;Cases&quot;, &quot;Deaths&quot;))+
+    scale_x_date(date_breaks = &quot;week&quot;, date_labels = &quot;%b %d&quot;)+
+    scale_y_continuous(breaks=c(50000, 100000, 200000, 300000, 400000, 500000, 750000),
+                     label=c(&quot;50k&quot;,&quot;100k&quot;, &quot;200k&quot;, &quot;300k&quot;, &quot;400k&quot;, &quot;500k&quot;, &quot;750k&quot;))+
+    ggtitle(&quot;COVID-19 Cumulative cases and deaths in México - Last month&quot;)+
+    labs(caption = plotscaption)+
+    ylab(&quot;&quot;)+
+    xlab(&quot;Fecha&quot;)+
+    theme_bw()+
+    theme(title = element_text(size=14, face=&quot;bold&quot;, colour = &quot;black&quot;),
+          axis.text.y = element_text(size=11, face=&quot;bold&quot;, colour = &quot;black&quot;), 
+          axis.text.x = element_text(size=11, face=&quot;bold&quot;, colour = &quot;black&quot;),
+          legend.position = &quot;bottom&quot;,
+          legend.title = element_text(size = 14),
+          legend.text = element_text(size = 13),
+          legend.key.width = unit(1.5,&quot;cm&quot;))+
+    guides(colour = guide_legend(override.aes = list(size=2)))</code></pre>
+<img src="notebook_covid19_eng_files/figure-html/unnamed-chunk-38-1.png" width="1440" class=img-zoomable />
+</div>
+</div>
+</div>
+<div id="covid-19-cases-and-deaths-in-méxico-per-week" class="section level1 tabset tabset-fade">
+<h1>COVID-19 cases and deaths in México per week</h1>
+<pre class="r"><code>covid.mexico &lt;- covid.df[covid.df$location==&#39;Mexico&#39;,]
+week.agg &lt;- covid.mexico %&gt;%
+  group_by(week = week(date)) %&gt;%
+  summarise(mean_new_cases = mean(new_cases),
+            n = n(), 
+            loCI_new_cases = ci(new_cases)[2], 
+            hiCI_new_cases = ci(new_cases)[3], 
+            mean_new_deaths = mean(new_deaths), 
+            loCI_new_deaths = ci(new_deaths)[2], 
+            hiCI_new_deaths = ci(new_deaths)[3], 
+            total_new_cases = sum(new_cases), 
+            total_new_deaths = sum(new_deaths))
+# Weeks with zero mean new cases are deleted
+week.agg &lt;- week.agg[which(week.agg$mean_new_cases &gt; 0),]
+# Finding the date of the first week to be ploted
+firstweek &lt;- min(week.agg$week)
+rowindex &lt;- match(firstweek, week(covid.mexico[,&quot;date&quot;]))
+firstweek.date &lt;- format(covid.mexico[rowindex, ]$date, &quot;%d/%m/%Y&quot;)
+rm(firstweek, rowindex)
+# Finding the date of the last week to be ploted
+lastweek &lt;- max(week.agg$week)
+rowindex &lt;- match(lastweek, week(covid.mexico[,&quot;date&quot;]))
+lastweek.date &lt;- format(covid.mexico[rowindex, ]$date, &quot;%d/%m/%Y&quot;)
+rm(lastweek, rowindex)
+sublabel &lt;- paste(&quot;Date range:&quot;, firstweek.date, &quot;-&quot;, lastweek.date)</code></pre>
+<div id="mean-cases-per-week" class="section level2">
+<h2>Mean cases per week</h2>
+<div>
+<pre class="r"><code>ggplot(data=week.agg, aes(x=as.character(week),y=mean_new_cases))+
+  geom_bar(stat = &#39;identity&#39;, aes(fill = mean_new_cases)) +
+  geom_errorbar(aes(ymin=loCI_new_cases, ymax=hiCI_new_cases), width=.2,
+                position=position_dodge(.9)) +
+  xlab(&quot;Week&quot;)+
+  ylab(&quot;Mean cases per week ± CI 95%&quot;)+
+  labs(title=&quot;Mean cases per week of COVID-19 in México&quot;,
+       subtitle = sublabel,
+       caption = plotscaption)+
+  scale_fill_gradient(name=&quot;Cases&quot;, low = &quot;green&quot;, high = &quot;red&quot;)+
+  theme_bw()+
+  theme(title = element_text(size=14, face=&quot;bold&quot;, colour = &quot;black&quot;),
+        axis.text.y = element_text(size=11, face=&quot;bold&quot;, colour = &quot;black&quot;),
+        axis.text.x = element_text(size=11, face=&quot;bold&quot;, colour = &quot;black&quot;))</code></pre>
+<img src="notebook_covid19_eng_files/figure-html/unnamed-chunk-39-1.png" width="1440" class=img-zoomable />
+</div>
+</div>
+<div id="mean-deaths-per-week" class="section level2">
+<h2>Mean deaths per week</h2>
+<div>
+<pre class="r"><code>ggplot(data=week.agg, aes(x=as.character(week),y=mean_new_deaths))+
+  geom_bar(stat = &#39;identity&#39;, aes(fill = mean_new_deaths)) +
+  geom_errorbar(aes(ymin=loCI_new_deaths, ymax=hiCI_new_deaths), width=.2,
+                position=position_dodge(.9)) +
+  xlab(&quot;Week&quot;)+
+  ylab(&quot;Mean deaths per week ± CI 95%&quot;)+
+  labs(title=&quot;Mean deaths per week from COVID-19 in México&quot;,
+       subtitle = sublabel,
+       caption = plotscaption)+
+  scale_fill_gradient(name=&quot;Deaths&quot;, low = &quot;green&quot;, high = &quot;red&quot;)+
+  theme_bw()+
+  theme(title = element_text(size=14, face=&quot;bold&quot;, colour = &quot;black&quot;),
+        axis.text.y = element_text(size=11, face=&quot;bold&quot;, colour = &quot;black&quot;),
+        axis.text.x = element_text(size=11, face=&quot;bold&quot;, colour = &quot;black&quot;))</code></pre>
+<img src="notebook_covid19_eng_files/figure-html/unnamed-chunk-40-1.png" width="1440" class=img-zoomable />
+</div>
+</div>
+<div id="total-cases-per-week" class="section level2">
+<h2>Total cases per week</h2>
+<div>
+<pre class="r"><code>ggplot(data=week.agg, aes(x=as.character(week),y=total_new_cases))+
+  geom_bar(stat = &#39;identity&#39;, aes(fill = total_new_cases)) +
+  xlab(&quot;Week&quot;)+
+  ylab(&quot;Total cases per week&quot;)+
+  labs(title=&quot;Total COVID-19 cases per week in México&quot;,
+       subtitle = sublabel,
+       caption = plotscaption)+
+  scale_fill_gradient(name=&quot;Total cases&quot;, low = &quot;green&quot;, high = &quot;red&quot;)+
+  theme_bw()+
+  theme(title = element_text(size=14, face=&quot;bold&quot;, colour = &quot;black&quot;),
+        axis.text.y = element_text(size=11, face=&quot;bold&quot;, colour = &quot;black&quot;),
+        axis.text.x = element_text(size=11, face=&quot;bold&quot;, colour = &quot;black&quot;))</code></pre>
+<img src="notebook_covid19_eng_files/figure-html/unnamed-chunk-41-1.png" width="1440" class=img-zoomable />
+</div>
+</div>
+<div id="total-deaths-per-week" class="section level2">
+<h2>Total deaths per week</h2>
+<div>
+<pre class="r"><code>ggplot(data=week.agg, aes(x=as.character(week),y=total_new_deaths))+
+  geom_bar(stat = &#39;identity&#39;, aes(fill = total_new_deaths)) +
+  xlab(&quot;Week&quot;)+
+  ylab(&quot;Total deaths per week&quot;)+
+  labs(title=&quot;Total COVID-19 deaths per week in México&quot;,
+       subtitle=sublabel,
+       caption = plotscaption)+
+  scale_fill_gradient(name=&quot;Total deaths&quot;, low = &quot;green&quot;, high = &quot;red&quot;)+
+  theme_bw()+
+  theme(title = element_text(size=14, face=&quot;bold&quot;, colour = &quot;black&quot;),
+        axis.text.y = element_text(size=11, face=&quot;bold&quot;, colour = &quot;black&quot;),
+        axis.text.x = element_text(size=11, face=&quot;bold&quot;, colour = &quot;black&quot;))</code></pre>
+<img src="notebook_covid19_eng_files/figure-html/unnamed-chunk-42-1.png" width="1440" class=img-zoomable />
+</div>
+<pre><code>## [1] &quot;es_MX.UTF-8&quot;</code></pre>
+<script>
+function zoomPlot(src){
+    $('.imagepreview').attr('src', src);
+        $('#imagemodal').modal('show');   
+}
+
+$(document).ready(function () {
+    $(".img-zoomable").on('click', function(){
+      //var imageURL = $(this).attr('src');
+      //console.log("Plot clicked");
+      zoomPlot($(this).attr('src'));
+    });
+})
+</script>
+</div>
+</div>
+
+<div class="row">
+<footer>
+    <div class="container text-center">
+    <p>oscarcastrolopez.github.io</p>
+    </div>
+</footer>
+</div>
+
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+<script>
+$(document).ready(function () {
+  window.initializeCodeFolding("hide" === "show");
+});
+</script>
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
